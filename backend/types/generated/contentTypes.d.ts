@@ -745,7 +745,7 @@ export interface ApiTileTile extends Struct.CollectionTypeSchema {
   };
   attributes: {
     category: Schema.Attribute.Enumeration<
-      ['archive', 'Tools', 'dashboard', 'Content Hub']
+      ['archive', 'tool', 'dashboard', 'content', 'experts']
     > &
       Schema.Attribute.Required;
     cover: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'> &

@@ -9,9 +9,13 @@ export default ({ env }) => [
         const origins = ['http://localhost:3000'];
         const frontendUrl = env('FRONTEND_URL', '');
         if (frontendUrl) {
+          const seen = new Set<string>();
           frontendUrl.split(',').forEach((u) => {
-            const trimmed = u.trim();
-            if (trimmed) origins.push(trimmed);
+            const trimmed = u.trim().replace(/\/+$/, '');
+            if (trimmed && !seen.has(trimmed)) {
+              seen.add(trimmed);
+              origins.push(trimmed);
+            }
           });
         }
         return origins;
