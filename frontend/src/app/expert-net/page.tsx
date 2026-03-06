@@ -149,7 +149,7 @@ const ExpertNetPage = () => {
         {/* ─── Card Grid ────────────────────────────────────── */}
         {bios.length > 0 && (
           <section className="max-w-6xl mx-auto px-6 pb-16 md:pb-20">
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {bios.map((bio: ExpertBio, idx: number) => {
                 const excerpt = plainText(bio.bio);
                 const slug = expertSlug(bio);
@@ -187,8 +187,8 @@ const ExpertNetPage = () => {
                     <div
                       style={{
                         position: "absolute",
-                        top: "0.75rem",
-                        left: "0.75rem",
+                        top: "0.5rem",
+                        left: "0.5rem",
                         zIndex: 30,
                         pointerEvents: "auto",
                       }}
@@ -207,13 +207,13 @@ const ExpertNetPage = () => {
                           src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${bio.photo.url}`}
                           alt={bio.name}
                           style={{
-                            width: "3.5rem",
-                            height: "3.5rem",
+                            width: "2.5rem",
+                            height: "2.5rem",
                             borderRadius: "50%",
                             objectFit: "cover",
-                            border: "3px solid #e9a059",
-                            outline: "2.5px solid rgba(255,255,255,0.8)",
-                            boxShadow: "0 3px 14px rgba(0,0,0,0.3)",
+                            border: "2px solid #e9a059",
+                            outline: "2px solid rgba(255,255,255,0.8)",
+                            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
                             display: "block",
                           }}
                         />
@@ -221,19 +221,19 @@ const ExpertNetPage = () => {
                         <div
                           data-avatar
                           style={{
-                            width: "3.5rem",
-                            height: "3.5rem",
+                            width: "2.5rem",
+                            height: "2.5rem",
                             borderRadius: "50%",
-                            border: "3px solid #e9a059",
-                            outline: "2.5px solid rgba(255,255,255,0.8)",
-                            boxShadow: "0 3px 14px rgba(0,0,0,0.3)",
+                            border: "2px solid #e9a059",
+                            outline: "2px solid rgba(255,255,255,0.8)",
+                            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             background: "#536c89",
                           }}
                         >
-                          <FaUser style={{ color: "rgba(255,255,255,0.6)", fontSize: "1.1rem" }} />
+                          <FaUser style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.85rem" }} />
                         </div>
                       )}
                     </div>
@@ -241,34 +241,34 @@ const ExpertNetPage = () => {
                     {/* Content overlay */}
                     <div className="expert-card__content text-white">
                       {/* Always-visible: name + title */}
-                      <h3 className="text-xl font-bold font-didot leading-snug">
+                      <h3 className="text-base font-bold font-didot leading-snug">
                         {bio.name}
                       </h3>
-                      <p className="mt-1 text-sm text-brand-orange font-medium font-plex">
+                      <p className="mt-0.5 text-xs text-brand-orange font-medium font-plex">
                         {bio.title}
                       </p>
 
                       {/* Revealed on hover */}
                       <div className="expert-card__detail">
-                        <div className="mt-4 h-px w-10 bg-brand-orange/60" />
+                        <div className="mt-2 h-px w-8 bg-brand-orange/60" />
 
-                        <p className="mt-4 text-sm text-white/75 leading-relaxed font-plex line-clamp-4">
-                          {excerpt.slice(0, 180)}
-                          {excerpt.length > 180 ? "..." : ""}
+                        <p className="mt-2 text-xs text-white/75 leading-relaxed font-plex line-clamp-3">
+                          {excerpt.slice(0, 140)}
+                          {excerpt.length > 140 ? "..." : ""}
                         </p>
 
-                        <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-brand-orange tracking-wide uppercase font-plex">
-                          View Profile <FaArrowRight size={10} />
+                        <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-brand-orange tracking-wide uppercase font-plex">
+                          View Profile <FaArrowRight size={8} />
                         </span>
                       </div>
                     </div>
 
                     <Link
                       href={`/expert-net/${slug}#book-session`}
-                      className="absolute top-4 right-4 z-20 inline-flex items-center gap-1.5 rounded-lg bg-brand-orange px-3 py-2 text-xs font-semibold text-white font-plex hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2"
+                      className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-lg bg-brand-orange px-2 py-1.5 text-[10px] font-semibold text-white font-plex hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <FaCalendarCheck size={12} /> Book session
+                      <FaCalendarCheck size={10} /> Book session
                     </Link>
                   </div>
                 );
