@@ -7,9 +7,13 @@ import { Logo } from "../../../../lib/types";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
 
+/** Fallback when Strapi is unreachable or logo media is missing. Add logo.png (or logo.svg) to frontend/public/. */
+const FALLBACK_LOGO = "/logo.png";
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [logo, setLogo] = useState<Logo | null>(null);
+  const [logoLoadFailed, setLogoLoadFailed] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -19,11 +23,12 @@ export default function LoginPage() {
       router.push('/');
     }
 
-    // Fetch logo
+    // Fetch logo from Strapi; fallback image is used if this fails or image errors
     const fetchLogo = async () => {
       try {
         const logoData = await getLogo();
-        setLogo(logoData);
+        setLogo(logoData ?? null);
+        setLogoLoadFailed(false);
       } catch (error) {
         console.error("Error fetching logo:", error);
       }
@@ -47,16 +52,21 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          {/* Logo Section */}
-          {logo && logo.logo && logo.logo.length > 0 && (
-            <div className="flex justify-center mb-6">
-              <img
-                src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${logo.logo[0].url}`}
-                alt="FF Content Hub Logo"
-                className="h-16 w-auto"
-              />
-            </div>
-          )}
+          {/* Logo: Strapi when available; fallback to public/logo.png if Strapi fails or image errors */}
+          <div className="flex justify-center mb-6">
+            <img
+              src={
+                !logoLoadFailed &&
+                logo?.logo?.[0]?.url &&
+                process.env.NEXT_PUBLIC_STRAPI_URL
+                  ? `${process.env.NEXT_PUBLIC_STRAPI_URL}${logo.logo[0].url}`
+                  : FALLBACK_LOGO
+              }
+              alt="FF Content Hub Logo"
+              className="h-16 w-auto"
+              onError={() => setLogoLoadFailed(true)}
+            />
+          </div>
           
           <h1 className="mb-2 text-2xl font-bold text-gray-900 font-didot">
             FF Content Hub
