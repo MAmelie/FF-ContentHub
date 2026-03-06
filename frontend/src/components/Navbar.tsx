@@ -32,21 +32,22 @@ const Navbar = () => {
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
 
-  const { memberSessionsTiles, podcastsTiles, additionalContentTiles } = useMemo(() => {
-    const memberSessions = tiles.filter((t) =>
-      t.category === "Member sessions" || t.category === "dashboard"
-    );
-    const podcasts = tiles.filter((t) =>
-      t.category === "Podcasts" || t.category === "Tools"
-    );
-    const additional = tiles.filter((t) =>
-      t.category === "Additional content" || t.category === "Content Hub"
-    );
-    return {
-      memberSessionsTiles: memberSessions,
-      podcastsTiles: podcasts,
-      additionalContentTiles: additional,
-    };
+  const CONTENT_TILE_ORDER = ["Member sessions", "Podcasts", "Additional content"];
+
+  const { toolTiles, contentTiles, expertTiles } = useMemo(() => {
+    const tools = tiles.filter((t) => t.category === "tool");
+    const experts = tiles.filter((t) => t.category === "experts");
+    const dashboard = tiles.filter((t) => t.category === "dashboard");
+    const contentOnly = tiles.filter((t) => t.category === "content");
+    const content = [...dashboard, ...contentOnly].sort((a, b) => {
+      const aIdx = CONTENT_TILE_ORDER.indexOf(a.title);
+      const bIdx = CONTENT_TILE_ORDER.indexOf(b.title);
+      if (aIdx === -1 && bIdx === -1) return 0;
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    });
+    return { toolTiles: tools, contentTiles: content, expertTiles: experts };
   }, [tiles]);
 
   useEffect(() => {
@@ -163,14 +164,15 @@ const Navbar = () => {
             </button>
             {contentHubOpen && (
               <div className="absolute top-full left-0 mt-1 min-w-[220px] rounded-lg bg-white shadow-xl border border-gray-100 py-2 z-[60]">
+                {/* Row 1: Content (Member sessions, Podcasts, additional content) */}
                 <div className="border-b border-gray-100 pb-2 mb-2">
                   <p className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider font-plex">
-                    Member sessions
+                    Content
                   </p>
-                  {memberSessionsTiles.length === 0 ? (
+                  {contentTiles.length === 0 ? (
                     <p className="px-3 py-1 text-sm text-gray-400">None</p>
                   ) : (
-                    memberSessionsTiles.map((tile) => {
+                    contentTiles.map((tile) => {
                       const href = getTileHref(tile);
                       const isExternal = href.startsWith("http");
                       return isExternal ? (
@@ -196,14 +198,15 @@ const Navbar = () => {
                     })
                   )}
                 </div>
+                {/* Row 2: Tools (Vendor Access, LibreChat) */}
                 <div className="border-b border-gray-100 pb-2 mb-2">
                   <p className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider font-plex">
-                    Podcasts
+                    Tools
                   </p>
-                  {podcastsTiles.length === 0 ? (
+                  {toolTiles.length === 0 ? (
                     <p className="px-3 py-1 text-sm text-gray-400">None</p>
                   ) : (
-                    podcastsTiles.map((tile) => {
+                    toolTiles.map((tile) => {
                       const href = getTileHref(tile);
                       const isExternal = href.startsWith("http");
                       return isExternal ? (
@@ -229,38 +232,42 @@ const Navbar = () => {
                     })
                   )}
                 </div>
+                {/* Row 3: Experts */}
                 <div>
                   <p className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider font-plex">
-                    Additional content
+                    Experts
                   </p>
-                  {additionalContentTiles.length === 0 ? (
-                    <p className="px-3 py-1 text-sm text-gray-400">None</p>
-                  ) : (
-                    additionalContentTiles.map((tile) => {
-                      const href = getTileHref(tile);
-                      const isExternal = href.startsWith("http");
-                      return isExternal ? (
-                        <a
-                          key={tile.id}
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
-                        >
-                          {tile.title}
-                        </a>
-                      ) : (
-                        <Link
-                          key={tile.id}
-                          href={href}
-                          onClick={() => setContentHubOpen(false)}
-                          className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
-                        >
-                          {tile.title}
-                        </Link>
-                      );
-                    })
-                  )}
+                  <Link
+                    href="/expert-net"
+                    onClick={() => setContentHubOpen(false)}
+                    className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                  >
+                    All Experts
+                  </Link>
+                  {expertTiles.map((tile) => {
+                    const href = getTileHref(tile);
+                    const isExternal = href.startsWith("http");
+                    return isExternal ? (
+                      <a
+                        key={tile.id}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                      >
+                        {tile.title}
+                      </a>
+                    ) : (
+                      <Link
+                        key={tile.id}
+                        href={href}
+                        onClick={() => setContentHubOpen(false)}
+                        className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                      >
+                        {tile.title}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -318,7 +325,7 @@ const Navbar = () => {
 
           {authenticated && user ? (
             <>
-              <Link
+              {/* <Link
                 href="/users/appointments"
                 className={`relative text-base font-plex transition-colors duration-200 pb-0.5 ${
                   pathname === "/users/appointments"
@@ -330,7 +337,7 @@ const Navbar = () => {
                 {pathname === "/users/appointments" && (
                   <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
                 )}
-              </Link>
+              </Link> */}
               <span className="text-white/70 text-base font-plex">
                 Hi, {getDisplayName(user)}
               </span>
