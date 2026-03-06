@@ -57,22 +57,26 @@ function HomeContent() {
 
     fetchData();
   }, [searchQuery, authChecked]);
+  // Order for the single "Content" row: dashboard (e.g. Member sessions) + content (Podcasts, Additional content)
   const CONTENT_TILE_ORDER = ["Member sessions", "Podcasts", "Additional content"];
 
-  const { toolTiles, contentSeriesTiles, contentTiles } = useMemo(() => {
-    const tools = tiles.filter(tile => tile.category === "Tools");
-    const contentSeries = tiles.filter(tile => tile.category === "dashboard");
-    const content = tiles
-      .filter(tile => tile.category === "Content Hub")
-      .sort((a, b) => {
-        const aIdx = CONTENT_TILE_ORDER.indexOf(a.title);
-        const bIdx = CONTENT_TILE_ORDER.indexOf(b.title);
-        if (aIdx === -1 && bIdx === -1) return 0;
-        if (aIdx === -1) return 1;
-        if (bIdx === -1) return -1;
-        return aIdx - bIdx;
-      });
-    return { toolTiles: tools, contentSeriesTiles: contentSeries, contentTiles: content };
+  const { toolTiles, contentTiles, expertTiles } = useMemo(() => {
+
+    console.log(tiles);
+
+    const tools = tiles.filter((tile) => tile.category === "tool");
+    const experts = tiles.filter((tile) => tile.category === "experts");
+    const dashboard = tiles.filter((tile) => tile.category === "dashboard");
+    const contentOnly = tiles.filter((tile) => tile.category === "content");
+    const content = [...dashboard, ...contentOnly].sort((a, b) => {
+      const aIdx = CONTENT_TILE_ORDER.indexOf(a.title);
+      const bIdx = CONTENT_TILE_ORDER.indexOf(b.title);
+      if (aIdx === -1 && bIdx === -1) return 0;
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    });
+    return { toolTiles: tools, contentTiles: content, expertTiles: experts };
   }, [tiles]);
 
   const handleTileClick = (tile: Tile) => {
@@ -174,66 +178,62 @@ function HomeContent() {
             {/* ─── Gradient Divider ───────────────────── */}
             <div className="gradient-divider mb-14" />
 
-            {/* ─── Tools Section ──────────────────────── */}
+            {/* ─── Row 1: Content (Member sessions, Podcasts, additional content) ───────────────────── */}
+            {contentTiles.length > 0 && (
+              <>
+                <section id="content-section" className="mb-14">
+                  <header className="mb-6">
+                    <h2 className="flex items-center gap-3 text-2xl font-bold mb-2 font-didot text-brand-blue">
+                      <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
+                      Content Hub
+                    </h2>
+                    <p className="text-sm text-subtitle font-plex">
+                      Member sessions, podcasts, and additional content to support your work.
+                    </p>
+                  </header>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {contentTiles.map((tile, idx) => renderTileCard(tile, idx, "bg-brand-blue"))}
+                  </div>
+                </section>
+                <div className="gradient-divider mb-14" />
+              </>
+            )}
+
+            {/* ─── Row 2: Tools (Vendor Access, LibreChat) ──────────────────────── */}
             {toolTiles.length > 0 && (
-              <section id="tools-section" className="mb-14">
+              <>
+                <section id="tools-section" className="mb-14">
+                  <header className="mb-6">
+                    <h2 className="flex items-center gap-3 text-2xl font-bold mb-2 font-didot text-brand-blue">
+                      <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
+                      Tools
+                    </h2>
+                    <p className="text-sm text-subtitle font-plex">
+                      Internal utilities and helpers to navigate and use your Feedforward content faster.
+                    </p>
+                  </header>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {toolTiles.map((tile, idx) => renderTileCard(tile, idx, "bg-brand-blue"))}
+                  </div>
+                </section>
+                <div className="gradient-divider mb-14" />
+              </>
+            )}
+
+            {/* ─── Row 3: Experts ───────────────────── */}
+            {expertTiles.length > 0 && (
+              <section id="experts-section" className="mb-14">
                 <header className="mb-6">
                   <h2 className="flex items-center gap-3 text-2xl font-bold mb-2 font-didot text-brand-blue">
                     <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
-                    Tools
+                    Experts
                   </h2>
                   <p className="text-sm text-subtitle font-plex">
-                    Internal utilities and helpers to navigate and use your Feedforward content faster.
+                    Connect with experts and access the expert network.
                   </p>
                 </header>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {toolTiles.map((tile, idx) => renderTileCard(tile, idx, "bg-brand-blue"))}
-                </div>
-              </section>
-            )}
-
-            {/* ─── Gradient Divider ───────────────────── */}
-            {contentSeriesTiles.length > 0 && (
-              <div className="gradient-divider mb-14" />
-            )}
-
-            {/* ─── Dashboard Section ───────────── */}
-            {contentSeriesTiles.length > 0 && (
-              <section className="mb-14">
-                <header className="mb-6">
-                  <h2 className="flex items-center gap-3 text-2xl font-bold mb-2 font-didot text-brand-blue">
-                    <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
-                    Dashboard
-                  </h2>
-                  <p className="text-sm text-subtitle font-plex">
-                    Curated content series and overview tiles that keep your initiatives on track.
-                  </p>
-                </header>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {contentSeriesTiles.map((tile, idx) => renderTileCard(tile, idx, "bg-brand-blue"))}
-                </div>
-              </section>
-            )}
-
-            {/* ─── Gradient Divider ───────────────────── */}
-            {contentTiles.length > 0 && (
-              <div className="gradient-divider mb-14" />
-            )}
-
-            {/* ─── Content Section ───────────────────── */}
-            {contentTiles.length > 0 && (
-              <section id="content-section" className="mb-14">
-                <header className="mb-6">
-                  <h2 className="flex items-center gap-3 text-2xl font-bold mb-2 font-didot text-brand-blue">
-                    <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
-                    Content
-                  </h2>
-                  <p className="text-sm text-subtitle font-plex">
-                    Articles, guides, and other content to support your work.
-                  </p>
-                </header>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {contentTiles.map((tile, idx) => renderTileCard(tile, idx, "bg-brand-blue"))}
+                  {expertTiles.map((tile, idx) => renderTileCard(tile, idx, "bg-brand-blue"))}
                 </div>
               </section>
             )}
