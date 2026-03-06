@@ -4,9 +4,12 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
+/** Canonical app URL (e.g. https://memberportal.feedforward.ai). If set, we redirect here after login so the URL bar always shows the desired domain. */
+const CANONICAL_APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || '';
 
 function DiscordRedirectContent() {
   const [text, setText] = useState('Loading...');
+  const [authFailed, setAuthFailed] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -31,31 +34,57 @@ function DiscordRedirectContent() {
           }
         );
 
-        if (!response.ok) {
-          throw new Error(`Couldn't login to Strapi. Status: ${response.status}`);
+        let data: { jwt?: string; user?: unknown; error?: { message?: string }; message?: string | string[] } = {};
+        try {
+          data = await response.json();
+        } catch {
+          /* non-JSON response */
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+          const msg =
+            data?.error?.message ??
+            (Array.isArray(data?.message) ? data.message[0] : data?.message) ??
+            `Login failed (${response.status})`;
+          throw new Error(typeof msg === 'string' ? msg : String(msg));
+        }
+
+        const jwt = data.jwt;
+        if (!jwt) {
+          throw new Error('Invalid login response: no token received');
+        }
 
         // Successfully logged with Strapi
         // Save the JWT and user info for future authenticated requests
-        localStorage.setItem('jwt', data.jwt);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('jwt', jwt);
+        localStorage.setItem('user', JSON.stringify(data.user ?? {}));
         
         setText('You have been successfully logged in. You will be redirected in a few seconds...');
         
-        // Redirect to homepage after 3 seconds
+        // Redirect to homepage after 3 seconds; use canonical URL so the bar shows the desired domain (e.g. memberportal.feedforward.ai)
+        const redirectPath = '/';
         setTimeout(() => {
-          router.push('/');
+          if (CANONICAL_APP_URL && typeof window !== 'undefined' && window.location.origin !== new URL(CANONICAL_APP_URL).origin) {
+            window.location.href = `${CANONICAL_APP_URL}${redirectPath}`;
+          } else {
+            router.push(redirectPath);
+          }
         }, 3000);
 
       } catch (error) {
         console.error('Authentication error:', error);
-        setText('An error occurred during authentication. Please try again.');
+        setAuthFailed(true);
+        const message = error instanceof Error ? error.message : 'An error occurred during authentication. Please try again.';
+        setText(message);
         
         // Redirect to login page after 5 seconds on error
+        const loginPath = '/auth/login';
         setTimeout(() => {
-          router.push('/auth/login');
+          if (CANONICAL_APP_URL && typeof window !== 'undefined' && window.location.origin !== new URL(CANONICAL_APP_URL).origin) {
+            window.location.href = `${CANONICAL_APP_URL}${loginPath}`;
+          } else {
+            router.push(loginPath);
+          }
         }, 5000);
       }
     };
@@ -97,7 +126,7 @@ function DiscordRedirectContent() {
             </div>
           )}
           
-          {text.includes('error') && (
+          {(authFailed || text.includes('error')) && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -118,6 +147,9 @@ function DiscordRedirectContent() {
                   <h3 className="text-sm font-medium text-red-800 font-didot">
                     Authentication Failed
                   </h3>
+                  {authFailed && text && (
+                    <p className="mt-1 text-sm text-red-700 font-plex">{text}</p>
+                  )}
                 </div>
               </div>
             </div>
