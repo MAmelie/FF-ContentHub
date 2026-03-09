@@ -11,10 +11,19 @@ const Footer = () => {
       <div className="h-px bg-gradient-to-r from-transparent via-brand-orange to-transparent" />
 
       <div className="bg-brand-blue py-8">
-        <div className="max-w-6xl mx-auto px-6 flex justify-between items-center">
-          <p className="text-sm text-white/60 font-plex">
-            &copy; 2026 Feedforward
-          </p>
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            {/* <Link href="/" className="shrink-0">
+              <img
+                src="/FF-PrimaryLockup_RGB.png"
+                alt="Feedforward AI"
+                className="h-10 w-auto"
+              />
+            </Link> */}
+            <p className="text-sm text-white/60 font-plex">
+              &copy; 2026 Feedforward
+            </p>
+          </div>
 
           <ul className="flex items-center gap-6 text-white/80 font-plex text-sm">
             {[

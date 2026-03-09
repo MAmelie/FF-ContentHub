@@ -20,8 +20,12 @@ function expertSlug(bio: ExpertBio): string {
   return (bio.slug?.trim()) ? bio.slug.trim() : slugFromName(bio.name);
 }
 
+/** Fallback when Strapi logo is unavailable. Use public/logo.png. */
+const FALLBACK_LOGO = "/logo.png";
+
 const Navbar = () => {
   const [logo, setLogo] = useState<Logo | null>(null);
+  const [logoLoadFailed, setLogoLoadFailed] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -54,7 +58,8 @@ const Navbar = () => {
     const fetchLogo = async () => {
       try {
         const logoData = await getLogo();
-        setLogo(logoData);
+        setLogo(logoData ?? null);
+        setLogoLoadFailed(false);
       } catch (error) {
         console.error("Error fetching logo:", error);
       }
@@ -127,14 +132,19 @@ const Navbar = () => {
       <nav className="max-w-6xl mx-auto flex justify-between items-center px-6">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-4">
-            {logo && logo.logo && logo.logo.length > 0 && (
-              <img
-                src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${logo.logo[0].url}`}
-                alt="Feedforward Member Portal Logo"
-                className="h-14 sm:h-16 w-auto"
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
-              />
-            )}
+            <img
+              src={
+                !logoLoadFailed &&
+                logo?.logo?.[0]?.url &&
+                process.env.NEXT_PUBLIC_STRAPI_URL
+                  ? `${process.env.NEXT_PUBLIC_STRAPI_URL}${logo.logo[0].url}`
+                  : FALLBACK_LOGO
+              }
+              alt=""
+              role="presentation"
+              className="h-14 sm:h-16 w-auto"
+              onError={() => setLogoLoadFailed(true)}
+            />
             <h1 className="font-semibold text-2xl sm:text-3xl text-white font-didot tracking-tight">
               Feedforward Member Portal
             </h1>
