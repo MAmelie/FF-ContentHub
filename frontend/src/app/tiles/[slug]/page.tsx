@@ -3,7 +3,7 @@
 import { useEffect, useState, use, useMemo } from "react";
 import { getTileBySlug, getAllDocuments } from "../../../../lib/api";
 import { useRouter } from "next/navigation";
-import { Tile, ListItem, Doc, Document } from "@/../lib/types";
+import { Tile, ListItem, Doc, Document, Recommendation, type RecommendationCategory } from "@/../lib/types";
 import { FaDownload, FaExternalLinkAlt, FaSearch, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
 import Loader from "@/components/Loader";
 import BackToHome from "@/components/BackToHome";
@@ -238,6 +238,28 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
         slug: doc.subtitle!.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
       }));
   }, [tile?.docs]);
+
+  const RECOMMENDATION_CATEGORY_ORDER: RecommendationCategory[] = [
+    "What to read",
+    "What to watch",
+    "What to listen to",
+    "Who to follow",
+  ];
+  const recommendationsByCategory = useMemo(() => {
+    if (!tile?.recommendations?.length) return [];
+    const groups = new Map<RecommendationCategory, Recommendation[]>();
+    for (const cat of RECOMMENDATION_CATEGORY_ORDER) {
+      groups.set(cat, []);
+    }
+    for (const rec of tile.recommendations) {
+      const list = groups.get(rec.category);
+      if (list) list.push(rec);
+    }
+    return RECOMMENDATION_CATEGORY_ORDER.map((category) => ({
+      category,
+      items: groups.get(category) ?? [],
+    })).filter((g) => g.items.length > 0);
+  }, [tile?.recommendations]);
 
   const scrollToSection = (slug: string) => {
     const element = document.getElementById(slug);
@@ -533,6 +555,51 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Curated recommendations (What to read / watch / listen to / who to follow) */}
+        {recommendationsByCategory.length > 0 && (
+          <div className="mb-8 space-y-8 mt-6">
+            {recommendationsByCategory.map(({ category, items }) => (
+              <section key={category} className="border-b border-gray-200 last:border-b-0 pb-8 last:pb-0">
+                <h2 className="text-2xl font-bold text-brand-blue mb-4 font-didot scroll-mt-20">
+                  {category}
+                </h2>
+                <div className="space-y-4">
+                  {items.map((rec: Recommendation) => (
+                    <div
+                      key={rec.id}
+                      className="bg-white p-5 rounded-xl border border-gray-200 hover:shadow-md transition-shadow"
+                    >
+                      <h3 className="text-base font-semibold text-brand-blue mb-2 font-didot">
+                        {rec.title}
+                      </h3>
+                      {rec.description && (
+                        <div className="text-gray-800 text-base font-plex leading-relaxed whitespace-pre-line mb-2">
+                          {rec.description}
+                        </div>
+                      )}
+                      {rec.recommended_by && (
+                        <p className="text-subtitle text-sm font-plex mb-2">
+                          Recommended by {rec.recommended_by}
+                        </p>
+                      )}
+                      {rec.link && (
+                        <a
+                          href={rec.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-brand-blue hover:text-brand-orange transition-colors text-sm font-plex"
+                        >
+                          View link <FaExternalLinkAlt className="ml-1 text-xs" />
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
         )}
 

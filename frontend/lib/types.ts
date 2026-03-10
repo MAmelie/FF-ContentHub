@@ -24,6 +24,21 @@ export interface Doc {
   slug: string;
 }
 
+export type RecommendationCategory =
+  | "What to read"
+  | "What to watch"
+  | "What to listen to"
+  | "Who to follow";
+
+export interface Recommendation {
+  id: number;
+  category: RecommendationCategory;
+  title: string;
+  description?: string;
+  recommended_by?: string;
+  link?: string;
+}
+
 export interface Tile {
   id: number;
   title: string;
@@ -35,6 +50,7 @@ export interface Tile {
   link: string; // External or internal link
   link_to_single_type: boolean; // Boolean indicating if tile should link to single type page
   list_items?: ListItem[]; // Direct list items on the tile
+  recommendations?: Recommendation[]; // Curated read/watch/listen/follow entries
   category: "archive" | "tool" | "dashboard" | "content" | "experts"; // Category enumeration
 }
 
