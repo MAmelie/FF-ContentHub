@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "recommendations",
+  "info": {
+    "singularName": "recommendation",
+    "pluralName": "recommendations",
+    "displayName": "Recommendation"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "category": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "What to read",
+        "What to watch",
+        "What to listen to",
+        "Who to follow"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "recommended_by": {
+      "type": "string"
+    },
+    "link": {
+      "type": "string"
+    }
+  }
+}

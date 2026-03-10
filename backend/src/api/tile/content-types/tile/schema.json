@@ -61,6 +61,11 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::doc.doc"
+    },
+    "recommendations": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::recommendation.recommendation"
     }
   }
 }
