@@ -605,16 +605,16 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
 
         {/* List items only (e.g. Additional content: 4 PDFs). Recommendations/tabs commented out above. */}
         {tile.list_items && tile.list_items.length > 0 && (
-          <div className="mb-8 mt-6">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-5">
-              <div className="relative flex-1 w-full min-w-0">
+          <div className="mb-8 mt-8 max-w-3xl">
+            <div className="mb-6">
+              <div className="relative w-full">
                 <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input pl-11 pr-4 py-2.5 text-sm text-primary font-plex w-full"
+                  className="search-input pl-11 pr-4 py-2.5 text-sm text-primary font-plex w-full rounded-lg border border-card focus:border-brand-blue focus:ring-1 focus:ring-brand-blue shadow-sm"
                 />
               </div>
               {/* Date sort button — commented out; list order is from CMS
@@ -629,92 +629,74 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
               */}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-5">
               {filteredAndSortedListItems.length > 0 ? (
                 filteredAndSortedListItems.map((item: ListItem, itemIndex: number) => (
-                  <div key={itemIndex} className="bg-white p-5 rounded-xl border border-gray-200 border-l-3 border-l-brand-orange hover:shadow-md transition-shadow">
-                    <h4 className="text-base font-semibold text-brand-blue mb-1 font-didot">{item.title}</h4>
+                  <article
+                    key={itemIndex}
+                    className="rounded-2xl bg-white border border-card shadow-sm overflow-hidden scroll-mt-4"
+                  >
+                    <div className="w-full px-6 py-5 min-h-[88px]">
+                      <h4 className="text-lg font-semibold text-brand-blue mb-1 font-didot leading-snug">{item.title}</h4>
 
-                    {item.date && (
-                      <p className="text-subtitle text-base mb-2 font-plex">
-                        {new Date(item.date).toLocaleDateString()}
-                      </p>
-                    )}
-
-                    {item.link && (
-                      <a
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-brand-blue hover:text-brand-orange transition-colors mb-2 text-base font-plex"
-                      >
-                        View Link <FaExternalLinkAlt className="ml-1 text-xs" />
-                      </a>
-                    )}
-
-                    {item.attachment?.url && (
-                      <div className="mt-3">
-                        {item.attachment.mime?.startsWith('image/') ? (
-                          <div>
-                            <img
-                              src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${item.attachment.url}`}
-                              alt={item.attachment.alternativeText || item.title}
-                              className="max-w-full h-auto rounded-xl border border-gray-200 mb-2"
-                            />
+                      {(item.date || item.link) && (
+                        <div className="flex items-center gap-2 text-xs font-plex text-subtitle mb-3">
+                          {item.date && <span>{new Date(item.date).toLocaleDateString()}</span>}
+                          {item.date && item.link && <span>·</span>}
+                          {item.link && (
                             <a
-                              href={`${process.env.NEXT_PUBLIC_STRAPI_URL}${item.attachment.url}`}
+                              href={item.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center text-brand-blue hover:text-brand-orange transition-colors text-base font-plex"
+                              className="text-brand-blue hover:text-brand-orange transition-colors"
                             >
-                              Open Image <FaExternalLinkAlt className="ml-1 text-xs" />
+                              View Link <FaExternalLinkAlt className="inline ml-0.5 text-[10px]" />
                             </a>
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <p className="text-base font-medium text-primary font-plex">
-                                  {item.attachment.name || 'File Attachment'}
+                          )}
+                        </div>
+                      )}
+
+                      {item.attachment?.url && (
+                        <div className="mt-4">
+                          {item.attachment.mime?.startsWith('image/') ? (
+                            <div>
+                              <img
+                                src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${item.attachment.url}`}
+                                alt={item.attachment.alternativeText || item.title}
+                                className="max-w-full h-auto rounded-xl border border-card mb-3"
+                              />
+                              <a
+                                href={`${process.env.NEXT_PUBLIC_STRAPI_URL}${item.attachment.url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-brand-blue hover:text-brand-orange transition-colors text-sm font-plex"
+                              >
+                                Open Image <FaExternalLinkAlt className="ml-1.5 text-xs" />
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="bg-gray-50/80 border border-card rounded-xl px-6 py-5">
+                              {(item.description ?? (item.attachment.size != null && `${Math.round(item.attachment.size / 1024)} KB`)) && (
+                                <p className="text-[15px] text-subtitle font-plex leading-relaxed mb-5">
+                                  {item.description ?? (item.attachment.size != null ? `${Math.round(item.attachment.size / 1024)} KB` : null)}
                                 </p>
-                                <p className="text-xs text-subtitle">
-                                  {item.attachment.mime && (
-                                    <>
-                                      {item.attachment.mime.includes('pdf') && '📄 PDF Document'}
-                                      {item.attachment.mime.includes('powerpoint') && '📊 PowerPoint Presentation'}
-                                      {item.attachment.mime.includes('presentationml') && '📊 PowerPoint Presentation'}
-                                      {(item.attachment.mime.includes('word') || item.attachment.mime.includes('wordprocessing')) && '📝 Word Document'}
-                                      {item.attachment.mime.includes('excel') && '📈 Excel Spreadsheet'}
-                                      {item.attachment.mime.includes('sheet') && '📈 Excel Spreadsheet'}
-                                      {!item.attachment.mime.includes('pdf') &&
-                                       !item.attachment.mime.includes('powerpoint') &&
-                                       !item.attachment.mime.includes('presentationml') &&
-                                       !item.attachment.mime.includes('word') &&
-                                       !item.attachment.mime.includes('wordprocessing') &&
-                                       !item.attachment.mime.includes('document') &&
-                                       !item.attachment.mime.includes('excel') &&
-                                       !item.attachment.mime.includes('sheet') && '📎 File'}
-                                    </>
-                                  )}
-                                  {item.attachment.size && ` • ${Math.round(item.attachment.size / 1024)} KB`}
-                                </p>
-                              </div>
+                              )}
                               <a
                                 href={`${process.env.NEXT_PUBLIC_STRAPI_URL}${item.attachment.url}`}
                                 download={item.attachment.name || undefined}
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-brand-blue hover:bg-secondary-blue rounded-lg transition-colors font-plex"
+                                className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand-blue hover:bg-secondary-blue rounded-lg transition-colors font-plex"
                               >
-                                Download File <FaDownload className="ml-1 text-xs" />
+                                Download File <FaDownload className="ml-2 text-xs" />
                               </a>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </article>
                 ))
               ) : (
-                <div className="py-8 text-base text-subtitle font-plex">
+                <div className="py-12 text-center text-subtitle font-plex text-base">
                   {searchQuery ? (
                     <p>No items found matching &ldquo;{searchQuery}&rdquo;</p>
                   ) : (

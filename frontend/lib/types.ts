@@ -14,6 +14,7 @@ export interface ListItem {
   title: string;
   date?: string;
   link?: string;
+  description?: string;
   attachment?: ImageData;
 }
 
