@@ -24,7 +24,7 @@ const Footer = () => {
               &copy; 2026 Feedforward
             </p>
           </div>
-
+{/* 
           <ul className="flex items-center gap-6 text-white/80 font-plex text-sm">
             {[
               { href: "/docs", label: "Docs" },
@@ -41,7 +41,7 @@ const Footer = () => {
                 </Link>
               </li>
             ))}
-          </ul>
+          </ul> */}
         </div>
       </div>
     </footer>
