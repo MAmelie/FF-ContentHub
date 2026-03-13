@@ -180,10 +180,15 @@ function normalizeDocument(raw: Record<string, unknown>): {
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
+  order?: number | null;
+  publishedDate?: string | null;
 } {
   const attrs = raw.attributes as Record<string, unknown> | undefined;
   const title = (raw.title as string) ?? (attrs?.title as string) ?? "";
   const file = normalizeFile(raw.file ?? attrs?.file);
+  const orderRaw = raw.order ?? attrs?.order;
+  const order = typeof orderRaw === "number" && !Number.isNaN(orderRaw) ? orderRaw : null;
+  const publishedDate = (raw.publishedDate as string) ?? (attrs?.publishedDate as string) ?? null;
   return {
     id: (raw.id as number) ?? (raw.documentId as string) ?? 0,
     title,
@@ -192,6 +197,8 @@ function normalizeDocument(raw: Record<string, unknown>): {
     createdAt: (raw.createdAt as string) ?? (attrs?.createdAt as string) ?? "",
     updatedAt: (raw.updatedAt as string) ?? (attrs?.updatedAt as string) ?? "",
     publishedAt: (raw.publishedAt as string) ?? (attrs?.publishedAt as string) ?? "",
+    order: order ?? undefined,
+    publishedDate: publishedDate ?? undefined,
   };
 }
 

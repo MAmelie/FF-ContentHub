@@ -103,6 +103,10 @@ export interface Document {
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
+  /** Display order (lower = first). Used for podcasts list. */
+  order?: number | null;
+  /** Episode publish date; shown in UI, fallback to publishedAt if unset. */
+  publishedDate?: string | null;
 }
 
 export interface User {

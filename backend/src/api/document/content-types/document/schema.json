@@ -23,6 +23,12 @@
       "multiple": false,
       "required": true,
       "allowedTypes": ["files", "audios"]
+    },
+    "order": {
+      "type": "integer"
+    },
+    "publishedDate": {
+      "type": "date"
     }
   }
 }

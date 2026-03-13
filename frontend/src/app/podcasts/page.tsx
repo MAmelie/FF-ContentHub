@@ -70,10 +70,24 @@ const PodcastsPage = () => {
   }, [documents]);
 
   const filteredPodcasts = useMemo(() => {
-    if (!searchQuery) return podcastDocs;
-    return podcastDocs.filter((doc) =>
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const list = !searchQuery
+      ? podcastDocs
+      : podcastDocs.filter((doc) =>
+          doc.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    const hasOrder = list.some((d) => d.order != null && !Number.isNaN(d.order));
+    if (hasOrder) {
+      return [...list].sort((a, b) => {
+        const oA = a.order ?? 999;
+        const oB = b.order ?? 999;
+        return oA - oB;
+      });
+    }
+    return [...list].sort((a, b) => {
+      const dateA = (a.publishedDate ?? a.publishedAt) ? new Date(a.publishedDate ?? a.publishedAt).getTime() : 0;
+      const dateB = (b.publishedDate ?? b.publishedAt) ? new Date(b.publishedDate ?? b.publishedAt).getTime() : 0;
+      return dateB - dateA;
+    });
   }, [podcastDocs, searchQuery]);
 
   // Deep link: open to specific episode from shared link (#episode-123)
@@ -283,7 +297,7 @@ const PodcastsPage = () => {
                     <div className="flex items-center gap-2 text-xs font-plex text-subtitle mb-1">
                       <span>Episode</span>
                       <span>·</span>
-                      <span>{formatDate(podcast.publishedAt)}</span>
+                      <span>{formatDate(podcast.publishedDate ?? podcast.publishedAt)}</span>
                     </div>
                     <h2 className="text-lg font-semibold text-brand-blue font-didot break-words">
                       {podcast.title}
@@ -294,7 +308,7 @@ const PodcastsPage = () => {
                       <button
                         type="button"
                         onClick={() => (playing ? pause() : play(podcast))}
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full text-white bg-brand-blue hover:bg-secondary-blue transition-colors"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-full text-white bg-brand-orange hover:bg-amber-500 transition-colors duration-200"
                         aria-label={playing ? "Pause" : "Play"}
                       >
                         {playing ? <FaPause size={14} /> : <FaPlay size={14} />}
