@@ -113,19 +113,17 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
       );
     }
 
-    const sorted = [...filtered].sort((a, b) => {
-      if (!a.date && !b.date) return 0;
-      if (!a.date) return 1;
-      if (!b.date) return -1;
-
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
-
-      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-    });
-
-    return sorted;
-  }, [tile?.list_items, searchQuery, sortOrder]);
+    // const sorted = [...filtered].sort((a, b) => {
+    //   if (!a.date && !b.date) return 0;
+    //   if (!a.date) return 1;
+    //   if (!b.date) return -1;
+    //   const dateA = new Date(a.date).getTime();
+    //   const dateB = new Date(b.date).getTime();
+    //   return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    // });
+    // return sorted;
+    return filtered;
+  }, [tile?.list_items, searchQuery]);
 
   /** When member-sessions: map canonical session → Strapi document (for View/Download). */
   const canonicalToDocument = useMemo(() => {
@@ -609,7 +607,7 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
         {tile.list_items && tile.list_items.length > 0 && (
           <div className="mb-8 mt-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-5">
-              <div className="relative flex-1 max-w-xl">
+              <div className="relative flex-1 w-full min-w-0">
                 <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
                 <input
                   type="text"
@@ -619,6 +617,7 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
                   className="search-input pl-11 pr-4 py-2.5 text-sm text-primary font-plex w-full"
                 />
               </div>
+              {/* Date sort button — commented out; list order is from CMS
               <button
                 onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
                 className="inline-flex items-center px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-subtitle bg-white hover:bg-gray-50 transition-colors font-plex shrink-0"
@@ -627,6 +626,7 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
                 {sortOrder === "desc" ? <FaSortAmountDown className="mr-2" /> : <FaSortAmountUp className="mr-2" />}
                 Date {sortOrder === "desc" ? "↓" : "↑"}
               </button>
+              */}
             </div>
 
             <div className="space-y-3">
