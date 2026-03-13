@@ -38,9 +38,8 @@ const Navbar = () => {
 
   const CONTENT_TILE_ORDER = ["Member sessions", "Podcasts", "Additional content"];
 
-  const { toolTiles, contentTiles, expertTiles } = useMemo(() => {
+  const { toolTiles, contentTiles } = useMemo(() => {
     const tools = tiles.filter((t) => t.category === "tool");
-    const experts = tiles.filter((t) => t.category === "experts");
     const dashboard = tiles.filter((t) => t.category === "dashboard");
     const contentOnly = tiles.filter((t) => t.category === "content");
     const content = [...dashboard, ...contentOnly].sort((a, b) => {
@@ -51,7 +50,7 @@ const Navbar = () => {
       if (bIdx === -1) return -1;
       return aIdx - bIdx;
     });
-    return { toolTiles: tools, contentTiles: content, expertTiles: experts };
+    return { toolTiles: tools, contentTiles: content };
   }, [tiles]);
 
   useEffect(() => {
@@ -209,7 +208,7 @@ const Navbar = () => {
                   )}
                 </div>
                 {/* Row 2: Tools (Vendor Access, LibreChat) */}
-                <div className="border-b border-gray-100 pb-2 mb-2">
+                <div className="pb-2">
                   <p className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider font-plex">
                     Tools
                   </p>
@@ -241,43 +240,6 @@ const Navbar = () => {
                       );
                     })
                   )}
-                </div>
-                {/* Row 3: Experts */}
-                <div>
-                  <p className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider font-plex">
-                    Experts
-                  </p>
-                  <Link
-                    href="/expert-net"
-                    onClick={() => setContentHubOpen(false)}
-                    className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
-                  >
-                    All Experts
-                  </Link>
-                  {expertTiles.map((tile) => {
-                    const href = getTileHref(tile);
-                    const isExternal = href.startsWith("http");
-                    return isExternal ? (
-                      <a
-                        key={tile.id}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
-                      >
-                        {tile.title}
-                      </a>
-                    ) : (
-                      <Link
-                        key={tile.id}
-                        href={href}
-                        onClick={() => setContentHubOpen(false)}
-                        className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
-                      >
-                        {tile.title}
-                      </Link>
-                    );
-                  })}
                 </div>
               </div>
             )}
