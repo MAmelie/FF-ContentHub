@@ -57,8 +57,8 @@ function HomeContent() {
 
     fetchData();
   }, [searchQuery, authChecked]);
-  // Order for the single "Content" row: dashboard (e.g. Member sessions) + content (Podcasts, Additional content)
-  const CONTENT_TILE_ORDER = ["Member sessions", "Podcasts", "Additional content"];
+  // Order for the single "Content" row: dashboard (e.g. Meeting readoutss) + content (Podcasts, Additional content)
+  const CONTENT_TILE_ORDER = ["Meeting readouts", "Podcasts", "Additional content"];
 
   const { toolTiles, contentTiles, expertTiles } = useMemo(() => {
 
@@ -178,7 +178,7 @@ function HomeContent() {
             {/* ─── Gradient Divider ───────────────────── */}
             <div className="gradient-divider mb-14" />
 
-            {/* ─── Row 1: Content (Member sessions, Podcasts, additional content) ───────────────────── */}
+            {/* ─── Row 1: Content (Meeting readoutss, Podcasts, additional content) ───────────────────── */}
             {contentTiles.length > 0 && (
               <>
                 <section id="content-section" className="mb-14">
@@ -188,7 +188,7 @@ function HomeContent() {
                       Content Hub
                     </h2>
                     <p className="text-sm text-subtitle font-plex">
-                      Member sessions, podcasts, and additional content to support your work.
+                      Meeting readouts, podcasts, and additional content to support your work.
                     </p>
                   </header>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

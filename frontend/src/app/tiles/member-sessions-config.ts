@@ -1,5 +1,5 @@
 /**
- * Thematic grouping for the Member Sessions tile (Readout Archive).
+ * Thematic grouping for the Meeting readoutss tile (Readout Archive).
  * Slug of the tile in Strapi must match MEMBER_SESSIONS_TILE_SLUG in this file.
  * List items are assigned to groups by matching their title (substring, case-insensitive)
  * against the patterns in each group/subgroup. First match wins.
@@ -158,6 +158,8 @@ export const MEMBER_SESSION_GROUPS: ThematicGroup[] = [
     id: "security",
     emoji: "🔒",
     title: "Security & Risk",
+    description:
+      "Sessions on AI security, prompt injection, and emerging vulnerabilities — what to watch and how to mitigate.",
     patterns: [
       "AI & Security",
       "prompt injection",

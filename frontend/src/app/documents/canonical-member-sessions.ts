@@ -1,5 +1,5 @@
 /**
- * Canonical list of Feedforward Member Sessions (Readout Archive).
+ * Canonical list of Feedforward Meeting readoutss (Readout Archive).
  * Order and dates match the official document; links are merged from Strapi when available.
  * Sessions not yet in Strapi are still shown with document date; use linkTbd for "[link TBD]".
  */

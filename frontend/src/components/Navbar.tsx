@@ -36,7 +36,7 @@ const Navbar = () => {
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
 
-  const CONTENT_TILE_ORDER = ["Member sessions", "Podcasts", "Additional content"];
+  const CONTENT_TILE_ORDER = ["Meeting readouts", "Podcasts", "Additional content"];
 
   const { toolTiles, contentTiles } = useMemo(() => {
     const tools = tiles.filter((t) => t.category === "tool");
@@ -173,7 +173,7 @@ const Navbar = () => {
             </button>
             {contentHubOpen && (
               <div className="absolute top-full left-0 mt-1 min-w-[220px] rounded-lg bg-white shadow-xl border border-gray-100 py-2 z-[60]">
-                {/* Row 1: Content (Member sessions, Podcasts, additional content) */}
+                {/* Row 1: Content (Meeting readoutss, Podcasts, additional content) */}
                 <div className="border-b border-gray-100 pb-2 mb-2">
                   <p className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider font-plex">
                     Content

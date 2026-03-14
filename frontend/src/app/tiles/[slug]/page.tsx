@@ -345,7 +345,7 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
       </div>
     );
   if (error) return <p className="max-w-screen-md mx-auto p-8 text-red-500">Error: {error}</p>;
-  // Member sessions page always shows the canonical list (document order); tile is optional for links
+  // Meeting readoutss page always shows the canonical list (document order); tile is optional for links
   if (!tile && !isMemberSessions) return <p className="max-w-screen-md mx-auto p-8 text-subtitle">No tile found.</p>;
 
   const tocEntries: TocEntry[] =
@@ -465,13 +465,13 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
         {isMemberSessions ? (
           <>
             <h1 className="text-3xl leading-snug font-bold text-brand-blue font-didot">
-              Feedforward Member Sessions
+              Feedforward Meeting readoutss
             </h1>
             <p className="mt-2 text-xl text-gray-700 font-plex font-medium">
               Readout Archive & Thematic Groupings
             </p>
             <p className="mt-1 text-base text-subtitle font-plex">
-              Last updated: February 2026 &nbsp;&bull;&nbsp; Sessions from Jan 2025 – Feb 2026
+              Last updated: March 2026 &nbsp;&bull;&nbsp; Sessions from Jan 2025 – Feb 2026
             </p>
 
             <div className="mt-6 mb-4">
