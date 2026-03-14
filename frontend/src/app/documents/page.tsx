@@ -7,33 +7,22 @@ import Loader from "../../components/Loader";
 import BackToHome from "../../components/BackToHome";
 import { FaSearch, FaExternalLinkAlt, FaDownload } from "react-icons/fa";
 import { MEMBER_SESSION_GROUPS } from "../tiles/member-sessions-config";
-import {
-  CANONICAL_MEMBER_SESSIONS,
-  type CanonicalSectionSession,
-} from "./canonical-member-sessions";
 
-/** Parse session title from Strapi document title (e.g. "Apr 2, 2025 call readout_Session Name"). */
-function getSessionTitleFromDoc(title: string): string {
-  const afterReadout = title.match(/call\s*readout[_:\s]+(.+)$/i);
-  if (afterReadout?.[1]) return afterReadout[1].trim();
-  return title;
+function isPdfDocument(doc: Document): boolean {
+  const mime = (doc.file?.mime ?? doc.file?.mimeType ?? "").toString().toLowerCase();
+  if (!mime) return false;
+  if (mime.includes("audio") || mime.includes("mpeg") || mime.includes("mp3") || mime.includes("ogg") || mime.includes("wav")) return false;
+  return mime.includes("pdf");
 }
 
-/** Normalize for matching: lowercase, collapse spaces, remove smart quotes. */
-function normalizeForMatch(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/** True if the Strapi document title (parsed session title) matches this canonical session. */
-function docMatchesCanonicalSession(docTitle: string, canonical: CanonicalSectionSession): boolean {
-  const docSession = getSessionTitleFromDoc(docTitle);
-  const a = normalizeForMatch(canonical.title);
-  const b = normalizeForMatch(docSession);
-  return b.includes(a) || a.includes(b);
+function formatSessionDate(iso?: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 const DocumentsPage = () => {
@@ -42,13 +31,6 @@ const DocumentsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  function isPdfDocument(doc: Document): boolean {
-    const mime = (doc.file?.mime ?? doc.file?.mimeType ?? "").toString().toLowerCase();
-    if (!mime) return false;
-    if (mime.includes("audio") || mime.includes("mpeg") || mime.includes("mp3") || mime.includes("ogg") || mime.includes("wav")) return false;
-    return mime.includes("pdf");
-  }
-
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
@@ -56,7 +38,6 @@ const DocumentsPage = () => {
         setDocuments(data.documents.filter(isPdfDocument));
       } catch (err) {
         console.error("Error fetching documents:", err);
-        // Still show the canonical list; View/Download links will appear when Strapi has documents
         setDocuments([]);
       } finally {
         setLoading(false);
@@ -66,78 +47,81 @@ const DocumentsPage = () => {
     fetchDocuments();
   }, []);
 
-  /** Map each canonical session to a Strapi document if one matches (by title). */
-  const canonicalToDocument = useMemo(() => {
-    const map = new Map<CanonicalSectionSession, Document | null>();
-    const usedDocIds = new Set<string | number>();
-    for (const session of CANONICAL_MEMBER_SESSIONS) {
-      const matched = documents.find(
-        (doc) =>
-          !usedDocIds.has(doc.id) && docMatchesCanonicalSession(doc.title, session)
-      );
-      if (matched) {
-        map.set(session, matched);
-        usedDocIds.add(matched.id);
-      } else {
-        map.set(session, null);
-      }
-    }
-    return map;
+  /** Effective group: "slides" if title contains "slides", else Strapi sessionGroup, else "more". All PDFs appear. */
+  function effectiveSessionGroup(doc: Document): string {
+    if (doc.title.toLowerCase().includes("slides")) return "slides";
+    if (doc.sessionGroup && doc.sessionGroup.trim() !== "") return doc.sessionGroup;
+    return "more";
+  }
+
+  /** All PDFs with effective group (so every document appears under a section). */
+  const documentsWithGroup = useMemo(() => {
+    return documents.map((doc) => ({ doc, effectiveGroup: effectiveSessionGroup(doc) }));
   }, [documents]);
 
-  /** Filter canonical sessions by search (title, group, subgroup, description). */
-  const filteredCanonicalSessions = useMemo(() => {
-    if (!searchQuery.trim()) return CANONICAL_MEMBER_SESSIONS;
+  /** Filter by search: title or section/group name. */
+  const filteredDocumentsWithGroup = useMemo(() => {
+    if (!searchQuery.trim()) return documentsWithGroup;
     const q = searchQuery.toLowerCase().trim();
-    const groupMatches = (groupId: string, subGroupId?: string) => {
-      const group = MEMBER_SESSION_GROUPS.find((g) => g.id === groupId);
-      if (!group) return false;
-      if (group.title.toLowerCase().includes(q)) return true;
-      if (group.description?.toLowerCase().includes(q)) return true;
-      if (subGroupId) {
-        const sg = group.subGroups?.find((s) => s.id === subGroupId);
+    return documentsWithGroup.filter(({ doc, effectiveGroup }) => {
+      if (doc.title.toLowerCase().includes(q)) return true;
+      const group = MEMBER_SESSION_GROUPS.find((g) => g.id === effectiveGroup);
+      if (group?.title.toLowerCase().includes(q) || group?.description?.toLowerCase().includes(q)) return true;
+      if (doc.sessionSubGroup && group?.subGroups) {
+        const sg = group.subGroups.find((s) => s.id === doc.sessionSubGroup);
         if (sg?.title.toLowerCase().includes(q)) return true;
       }
       return false;
-    };
-    return CANONICAL_MEMBER_SESSIONS.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) || groupMatches(s.groupId, s.subGroupId)
-    );
-  }, [searchQuery]);
+    });
+  }, [documentsWithGroup, searchQuery]);
 
-  /** Group filtered canonical sessions by groupId / subGroupId (preserving order). */
-  const groupedCanonical = useMemo(() => {
+  /** Group filtered documents by effectiveGroup / sessionSubGroup, sorted by publishedDate (then order) within each bucket. */
+  const groupedBySection = useMemo(() => {
     const byGroup: Record<
       string,
-      {
-        subGroups?: Record<string, { title: string; sessions: CanonicalSectionSession[] }>;
-        directSessions?: CanonicalSectionSession[];
-      }
+      | { directSessions: Document[] }
+      | { subGroups: Record<string, Document[]>; directSessions?: Document[] }
     > = {};
-    for (const session of filteredCanonicalSessions) {
-      const group = MEMBER_SESSION_GROUPS.find((g) => g.id === session.groupId);
-      if (!group) continue;
-      if (!byGroup[session.groupId]) {
-        if (group.subGroups) {
-          byGroup[session.groupId] = {
-            subGroups: Object.fromEntries(
-              group.subGroups.map((sg) => [sg.id, { title: sg.title, sessions: [] }])
-            ),
-          };
-        } else {
-          byGroup[session.groupId] = { directSessions: [] };
+
+    const sortDocs = (a: Document, b: Document) => {
+      const dateA = a.publishedDate ?? a.publishedAt ? new Date(a.publishedDate ?? a.publishedAt).getTime() : 0;
+      const dateB = b.publishedDate ?? b.publishedAt ? new Date(b.publishedDate ?? b.publishedAt).getTime() : 0;
+      if (dateB !== dateA) return dateB - dateA;
+      const oA = a.order ?? 999;
+      const oB = b.order ?? 999;
+      return oA - oB;
+    };
+
+    for (const group of MEMBER_SESSION_GROUPS) {
+      const docsInGroup = filteredDocumentsWithGroup
+        .filter(({ effectiveGroup }) => effectiveGroup === group.id)
+        .map(({ doc }) => doc);
+      if (docsInGroup.length === 0) continue;
+
+      if (group.subGroups && group.subGroups.length > 0) {
+        const subGroups: Record<string, Document[]> = {};
+        const directInGroup: Document[] = [];
+        for (const doc of docsInGroup) {
+          if (doc.sessionSubGroup && group.subGroups.some((sg) => sg.id === doc.sessionSubGroup)) {
+            const id = doc.sessionSubGroup!;
+            if (!subGroups[id]) subGroups[id] = [];
+            subGroups[id].push(doc);
+          } else {
+            directInGroup.push(doc);
+          }
         }
-      }
-      const bucket = byGroup[session.groupId];
-      if (session.subGroupId && bucket.subGroups?.[session.subGroupId]) {
-        bucket.subGroups[session.subGroupId].sessions.push(session);
-      } else if (bucket.directSessions) {
-        bucket.directSessions.push(session);
+        for (const id of Object.keys(subGroups)) subGroups[id].sort(sortDocs);
+        directInGroup.sort(sortDocs);
+        if (Object.keys(subGroups).length > 0 || directInGroup.length > 0) {
+          byGroup[group.id] = { subGroups, ...(directInGroup.length > 0 && { directSessions: directInGroup }) };
+        }
+      } else {
+        byGroup[group.id] = { directSessions: docsInGroup.sort(sortDocs) };
       }
     }
-    return { byGroup: byGroup };
-  }, [filteredCanonicalSessions]);
+
+    return byGroup;
+  }, [filteredDocumentsWithGroup]);
 
   if (loading)
     return (
@@ -186,19 +170,22 @@ const DocumentsPage = () => {
         </p>
       </div>
 
-      {filteredCanonicalSessions.length === 0 ? (
+      {filteredDocumentsWithGroup.length === 0 ? (
         <div className="text-subtitle p-12 text-center font-plex">
-          {searchQuery ? "No sessions match your search" : "No sessions found"}
+          {searchQuery ? "No documents match your search" : "No PDF documents found."}
         </div>
       ) : (
         <div className="space-y-10 mt-8">
           {MEMBER_SESSION_GROUPS.map((group) => {
-            const bucket = groupedCanonical.byGroup[group.id];
+            const bucket = groupedBySection[group.id];
             if (!bucket) return null;
-            const hasDirect = (bucket.directSessions?.length ?? 0) > 0;
+
+            const directSessions = (bucket as { directSessions?: Document[] }).directSessions;
+            const hasDirect = (directSessions?.length ?? 0) > 0;
             const hasSubGroups =
+              "subGroups" in bucket &&
               bucket.subGroups &&
-              Object.values(bucket.subGroups).some((sg) => sg.sessions.length > 0);
+              Object.values(bucket.subGroups).some((arr) => arr.length > 0);
             if (!hasDirect && !hasSubGroups) return null;
 
             return (
@@ -211,104 +198,134 @@ const DocumentsPage = () => {
                     {group.description}
                   </p>
                 )}
-                {bucket.subGroups ? (
+                {"subGroups" in bucket && bucket.subGroups ? (
                   <div className="space-y-5">
                     {Object.entries(bucket.subGroups)
-                      .filter(([, sg]) => sg.sessions.length > 0)
-                      .map(([subId, sg]) => (
-                        <div key={subId}>
-                          <h3 className="text-base font-semibold text-brand-blue font-didot mb-2">
-                            {sg.title}
-                          </h3>
-                          <ul className="space-y-2 list-none pl-0">
-                            {sg.sessions.map((session, idx) => {
-                              const doc = canonicalToDocument.get(session);
-                              const fileUrl =
-                                doc?.file?.url &&
-                                `${process.env.NEXT_PUBLIC_STRAPI_URL}${doc.file.url}`;
-                              const showLinkTbd = session.linkTbd && !fileUrl;
-                              return (
-                                <li
-                                  key={`${session.groupId}-${session.subGroupId}-${idx}-${session.date}-${session.title.slice(0, 30)}`}
-                                  className="flex flex-nowrap items-center gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
-                                >
-                                  <span className="text-base text-primary font-plex shrink-0">
-                                    {session.date} — {session.title}
-                                    {showLinkTbd && (
-                                      <span className="text-subtitle font-normal"> [link TBD]</span>
-                                    )}
-                                  </span>
-                                  {fileUrl && (
-                                    <span className="flex shrink-0 items-center gap-2">
-                                      <a
-                                        href={fileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-xs font-medium"
-                                      >
-                                        <FaExternalLinkAlt size={10} />
-                                        View
-                                      </a>
-                                      <a
-                                        href={fileUrl}
-                                        download
-                                        className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-xs font-medium"
-                                      >
-                                        <FaDownload size={10} />
-                                        Download
-                                      </a>
+                      .filter(([, docs]) => docs.length > 0)
+                      .map(([subId, docs]) => {
+                        const sg = group.subGroups?.find((s) => s.id === subId);
+                        return (
+                          <div key={subId}>
+                            {sg && (
+                              <h3 className="text-base font-semibold text-brand-blue font-didot mb-2">
+                                {sg.title}
+                              </h3>
+                            )}
+                            <ul className="space-y-2 list-none pl-0">
+                              {docs.map((doc) => {
+                                const fileUrl =
+                                  doc.file?.url &&
+                                  `${process.env.NEXT_PUBLIC_STRAPI_URL}${doc.file.url}`;
+                                const displayDate = formatSessionDate(doc.publishedDate ?? doc.publishedAt);
+                                return (
+                                  <li
+                                    key={doc.id}
+                                    className="flex flex-nowrap items-center gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                                  >
+                                    <span className="text-base text-primary font-plex shrink-0">
+                                      {doc.title} — {displayDate}
                                     </span>
-                                  )}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      ))}
+                                    {fileUrl && (
+                                      <span className="flex shrink-0 items-center gap-2">
+                                        <a
+                                          href={fileUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-xs font-medium"
+                                        >
+                                          <FaExternalLinkAlt size={10} />
+                                          View
+                                        </a>
+                                        <a
+                                          href={fileUrl}
+                                          download
+                                          className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-xs font-medium"
+                                        >
+                                          <FaDownload size={10} />
+                                          Download
+                                        </a>
+                                      </span>
+                                    )}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        );
+                      })}
+                    {"directSessions" in bucket && (bucket.directSessions?.length ?? 0) > 0 && (
+                      <div className="mt-4">
+                        <ul className="space-y-2 list-none pl-0">
+                          {bucket.directSessions!.map((doc) => {
+                            const fileUrl =
+                              doc.file?.url &&
+                              `${process.env.NEXT_PUBLIC_STRAPI_URL}${doc.file.url}`;
+                            const displayDate = formatSessionDate(doc.publishedDate ?? doc.publishedAt);
+                            return (
+                              <li
+                                key={doc.id}
+                                className="flex flex-nowrap items-center gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                              >
+                                <span className="text-base text-primary font-plex shrink-0">
+                                  {doc.title} — {displayDate}
+                                </span>
+                                {fileUrl && (
+                                  <span className="flex shrink-0 items-center gap-2">
+                                    <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-xs font-medium">
+                                      <FaExternalLinkAlt size={10} /> View
+                                    </a>
+                                    <a href={fileUrl} download className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-xs font-medium">
+                                      <FaDownload size={10} /> Download
+                                    </a>
+                                  </span>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <ul className="space-y-2 list-none pl-0">
-                    {bucket.directSessions?.map((session, idx) => {
-                      const doc = canonicalToDocument.get(session);
-                      const fileUrl =
-                        doc?.file?.url &&
-                        `${process.env.NEXT_PUBLIC_STRAPI_URL}${doc.file.url}`;
-                      const showLinkTbd = session.linkTbd && !fileUrl;
-                      return (
-                        <li
-                          key={`${session.groupId}-${idx}-${session.date}-${session.title.slice(0, 30)}`}
-                          className="flex flex-nowrap items-center gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
-                        >
-                          <span className="text-base text-primary font-plex min-w-0 truncate">
-                            {session.date} — {session.title}
-                            {showLinkTbd && (
-                              <span className="text-subtitle font-normal"> [link TBD]</span>
-                            )}
-                          </span>
-                          {fileUrl && (
-                            <span className="flex shrink-0 items-center gap-2">
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-xs font-medium"
-                              >
-                                <FaExternalLinkAlt size={10} />
-                                View
-                              </a>
-                              <a
-                                href={fileUrl}
-                                download
-                                className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-xs font-medium"
-                              >
-                                <FaDownload size={10} />
-                                Download
-                              </a>
+                    {"directSessions" in bucket &&
+                      bucket.directSessions?.map((doc) => {
+                        const fileUrl =
+                          doc.file?.url &&
+                          `${process.env.NEXT_PUBLIC_STRAPI_URL}${doc.file.url}`;
+                        const displayDate = formatSessionDate(doc.publishedDate ?? doc.publishedAt);
+                        return (
+                          <li
+                            key={doc.id}
+                            className="flex flex-nowrap items-center gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                          >
+                            <span className="text-base text-primary font-plex min-w-0 truncate">
+                              {doc.title} — {displayDate}
                             </span>
-                          )}
-                        </li>
-                      );
-                    })}
+                            {fileUrl && (
+                              <span className="flex shrink-0 items-center gap-2">
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-xs font-medium"
+                                >
+                                  <FaExternalLinkAlt size={10} />
+                                  View
+                                </a>
+                                <a
+                                  href={fileUrl}
+                                  download
+                                  className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-xs font-medium"
+                                >
+                                  <FaDownload size={10} />
+                                  Download
+                                </a>
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
                   </ul>
                 )}
               </section>
@@ -318,8 +335,8 @@ const DocumentsPage = () => {
       )}
 
       <div className="mt-8 text-base text-subtitle font-plex">
-        Total: {filteredCanonicalSessions.length} session
-        {filteredCanonicalSessions.length !== 1 ? "s" : ""}
+        Total: {filteredDocumentsWithGroup.length} document
+        {filteredDocumentsWithGroup.length !== 1 ? "s" : ""}
       </div>
     </div>
   );

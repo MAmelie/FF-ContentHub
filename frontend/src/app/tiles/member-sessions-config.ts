@@ -173,6 +173,20 @@ export const MEMBER_SESSION_GROUPS: ThematicGroup[] = [
       "Sessions focused on evaluating the AI vendor landscape — more to come as this becomes a standing track.",
     patterns: ["Vendor Analysis", "IRL NYC"],
   },
+  {
+    id: "slides",
+    emoji: "📎",
+    title: "Slides",
+    description: "Slide decks and presentation materials from sessions.",
+    patterns: ["Slides", "slides"],
+  },
+  {
+    id: "more",
+    emoji: "📂",
+    title: "More",
+    description: "Additional documents and readouts not yet categorized.",
+    patterns: [],
+  },
 ];
 
 /** Assign a list item to a group id and optional subgroup id by matching title. */

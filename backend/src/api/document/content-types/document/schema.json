@@ -29,6 +29,12 @@
     },
     "publishedDate": {
       "type": "date"
+    },
+    "sessionGroup": {
+      "type": "string"
+    },
+    "sessionSubGroup": {
+      "type": "string"
     }
   }
 }

@@ -108,6 +108,10 @@ export interface Document {
   order?: number | null;
   /** Episode publish date; shown in UI, fallback to publishedAt if unset. */
   publishedDate?: string | null;
+  /** Member sessions page: which section header (matches MEMBER_SESSION_GROUPS id). */
+  sessionGroup?: string | null;
+  /** Member sessions page: optional subgroup (e.g. general-model-updates, coding-agents). */
+  sessionSubGroup?: string | null;
 }
 
 export interface User {

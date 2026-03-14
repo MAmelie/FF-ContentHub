@@ -182,6 +182,8 @@ function normalizeDocument(raw: Record<string, unknown>): {
   publishedAt: string;
   order?: number | null;
   publishedDate?: string | null;
+  sessionGroup?: string | null;
+  sessionSubGroup?: string | null;
 } {
   const attrs = raw.attributes as Record<string, unknown> | undefined;
   const title = (raw.title as string) ?? (attrs?.title as string) ?? "";
@@ -189,6 +191,8 @@ function normalizeDocument(raw: Record<string, unknown>): {
   const orderRaw = raw.order ?? attrs?.order;
   const order = typeof orderRaw === "number" && !Number.isNaN(orderRaw) ? orderRaw : null;
   const publishedDate = (raw.publishedDate as string) ?? (attrs?.publishedDate as string) ?? null;
+  const sessionGroup = (raw.sessionGroup as string) ?? (attrs?.sessionGroup as string) ?? null;
+  const sessionSubGroup = (raw.sessionSubGroup as string) ?? (attrs?.sessionSubGroup as string) ?? null;
   return {
     id: (raw.id as number) ?? (raw.documentId as string) ?? 0,
     title,
@@ -199,6 +203,8 @@ function normalizeDocument(raw: Record<string, unknown>): {
     publishedAt: (raw.publishedAt as string) ?? (attrs?.publishedAt as string) ?? "",
     order: order ?? undefined,
     publishedDate: publishedDate ?? undefined,
+    sessionGroup: sessionGroup ?? undefined,
+    sessionSubGroup: sessionSubGroup ?? undefined,
   };
 }
 

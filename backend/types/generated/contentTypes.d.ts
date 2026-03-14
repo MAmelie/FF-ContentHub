@@ -539,6 +539,8 @@ export interface ApiDocumentDocument extends Struct.CollectionTypeSchema {
     order: Schema.Attribute.Integer;
     publishedAt: Schema.Attribute.DateTime;
     publishedDate: Schema.Attribute.Date;
+    sessionGroup: Schema.Attribute.String;
+    sessionSubGroup: Schema.Attribute.String;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
