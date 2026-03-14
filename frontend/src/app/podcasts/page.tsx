@@ -6,7 +6,7 @@ import { getAllDocuments } from "../../../lib/api";
 import { Document } from "../../../lib/types";
 import Loader from "../../components/Loader";
 import BackToHome from "../../components/BackToHome";
-import { FaPlay, FaPause, FaStop, FaSearch, FaHeadphones, FaChevronDown, FaChevronUp, FaShareAlt } from "react-icons/fa";
+import { FaPlay, FaPause, FaSearch, FaHeadphones, FaChevronDown, FaChevronUp, FaShareAlt, FaBackward, FaForward } from "react-icons/fa";
 
 const PodcastsPage = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -157,15 +157,12 @@ const PodcastsPage = () => {
     setIsAudioPlaying(false);
   }, []);
 
-  const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setCurrentTime(0);
-    setDuration(0);
-    setPlayingId(null);
-    setIsAudioPlaying(false);
+  const seekBy = useCallback((deltaSeconds: number) => {
+    const el = audioRef.current;
+    if (!el || !Number.isFinite(el.duration)) return;
+    const next = Math.max(0, Math.min(el.duration, el.currentTime + deltaSeconds));
+    el.currentTime = next;
+    setCurrentTime(next);
   }, []);
 
   const handleTimeUpdate = useCallback(() => {
@@ -234,22 +231,19 @@ const PodcastsPage = () => {
         onLoadedMetadata={handleLoadedMetadata}
       />
 
-      <header className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="flex items-center gap-3 text-3xl font-bold text-brand-blue font-didot">
-            <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-brand-orange/90 text-white shadow-md">
-              <FaHeadphones size={16} />
-            </span>
-            Podcasts
-          </h1>
-          <p className="mt-3 text-subtitle font-plex max-w-xl text-sm md:text-base">
-            Dive into Feedforward conversations, interviews and explainers.
-            Expand an episode for show notes.
-          </p>
-        </div>
-
-        <div className="relative w-full max-w-xs">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+      <header className="mb-10 flex flex-col gap-4">
+        <h1 className="flex items-center gap-3 text-3xl font-bold text-brand-blue font-didot">
+          <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-brand-orange/90 text-white shadow-md">
+            <FaHeadphones size={16} />
+          </span>
+          Podcasts
+        </h1>
+        <p className="text-subtitle font-plex text-sm md:text-base w-full">
+          Dive into Feedforward conversations, interviews and explainers.
+          Expand an episode for show notes.
+        </p>
+        <div className="relative w-full">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
           <input
             type="text"
             placeholder="Search episodes..."
@@ -288,7 +282,7 @@ const PodcastsPage = () => {
                 id={`episode-${podcast.id}`}
                 className="rounded-2xl bg-white border border-card shadow-sm overflow-hidden scroll-mt-4"
               >
-                {/* Tile: icon, full title, play/stop/share on tile, chevron for show notes */}
+                {/* Tile: icon, title, playback group (rewind 15 | play | forward 15), share, expand */}
                 <div className="w-full flex items-center gap-4 px-6 py-5 min-h-[88px]">
                   <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-blue/10 text-brand-blue shrink-0">
                     <FaHeadphones size={20} />
@@ -304,22 +298,40 @@ const PodcastsPage = () => {
                     </h2>
                   </div>
                   {fileUrl ? (
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div
+                      className="flex items-center rounded-full bg-gray-50/80 border border-gray-200/80 p-px gap-0 shrink-0"
+                      role="group"
+                      aria-label="Playback controls"
+                    >
                       <button
                         type="button"
-                        onClick={() => (playing ? pause() : play(podcast))}
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full text-white bg-brand-orange hover:bg-amber-500 transition-colors duration-200"
-                        aria-label={playing ? "Pause" : "Play"}
+                        onClick={() => seekBy(-15)}
+                        disabled={!playing}
+                        className="inline-flex items-center justify-center min-w-[32px] min-h-[32px] w-8 h-8 rounded-full text-gray-500 hover:text-brand-blue hover:bg-white hover:shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-500"
+                        aria-label="Rewind 15 seconds"
+                        title="Rewind 15 seconds"
                       >
-                        {playing ? <FaPause size={14} /> : <FaPlay size={14} />}
+                        <FaBackward size={11} />
+                        <span className="sr-only">15</span>
                       </button>
                       <button
                         type="button"
-                        onClick={stop}
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-full text-brand-blue border-2 border-brand-blue hover:bg-brand-blue hover:text-white transition-colors"
-                        aria-label="Stop"
+                        onClick={() => (playing ? pause() : play(podcast))}
+                        className="inline-flex items-center justify-center min-w-[36px] min-h-[36px] w-9 h-9 rounded-full text-white bg-brand-orange hover:bg-amber-500 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-1"
+                        aria-label={playing ? "Pause" : "Play"}
                       >
-                        <FaStop size={12} />
+                        {playing ? <FaPause size={12} /> : <FaPlay size={12} />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => seekBy(15)}
+                        disabled={!playing}
+                        className="inline-flex items-center justify-center min-w-[32px] min-h-[32px] w-8 h-8 rounded-full text-gray-500 hover:text-brand-blue hover:bg-white hover:shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-500"
+                        aria-label="Forward 15 seconds"
+                        title="Forward 15 seconds"
+                      >
+                        <FaForward size={11} />
+                        <span className="sr-only">15</span>
                       </button>
                     </div>
                   ) : (
@@ -328,20 +340,20 @@ const PodcastsPage = () => {
                   <button
                     type="button"
                     onClick={() => shareEpisode(podcast)}
-                    className="inline-flex items-center justify-center w-10 h-10 rounded-full text-brand-blue border border-gray-300 hover:bg-gray-100 transition-colors shrink-0"
+                    className="inline-flex items-center justify-center min-w-[32px] min-h-[32px] w-8 h-8 rounded-full text-brand-blue border-2 border-brand-blue hover:bg-brand-blue hover:text-white transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-1"
                     aria-label={sharedEpisodeId === podcast.id ? "Link copied!" : "Share this episode"}
                     title={sharedEpisodeId === podcast.id ? "Link copied!" : "Share this episode"}
                   >
-                    <FaShareAlt size={14} />
+                    <FaShareAlt size={11} />
                   </button>
                   <button
                     type="button"
                     onClick={() => toggleExpand(podcast.id)}
-                    className="shrink-0 p-2 text-subtitle hover:bg-gray-100 rounded-lg transition-colors"
+                    className="shrink-0 min-w-[32px] min-h-[32px] inline-flex items-center justify-center p-1 text-subtitle hover:bg-gray-100 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-1"
                     aria-expanded={expanded}
                     aria-label={expanded ? "Collapse show notes" : "Show notes"}
                   >
-                    {expanded ? <FaChevronUp size={16} /> : <FaChevronDown size={16} />}
+                    {expanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                   </button>
                 </div>
 
