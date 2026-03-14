@@ -25,6 +25,23 @@ function formatSessionDate(iso?: string | null): string {
   });
 }
 
+/** Trigger download via blob so cross-origin PDFs download instead of opening in-browser. */
+async function downloadDocument(url: string, filename: string) {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename.replace(/[^\w\s.-]/g, "").replace(/\s+/g, "-").slice(0, 120) + ".pdf";
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  } catch (err) {
+    console.error("Download failed, opening in new tab:", err);
+    window.open(url, "_blank");
+  }
+}
+
 const DocumentsPage = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,37 +154,31 @@ const DocumentsPage = () => {
     );
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <div className="max-w-5xl mx-auto px-6 py-10">
       <BackToHome />
 
       <h1 className="text-3xl leading-snug font-bold text-brand-blue font-didot">
-        Feedforward Member Sessions
+        Meeting readouts
       </h1>
       <p className="mt-2 text-xl text-gray-700 font-plex font-medium">
-        Readout Archive & Thematic Groupings
+        Archive
       </p>
       <p className="mt-1 text-base text-subtitle font-plex">
-        Last updated: February 2026 &nbsp;&bull;&nbsp; Sessions from Jan 2025 – Feb 2026
+        Last updated: March 2026 &nbsp;&bull;&nbsp; Sessions from Jan 2025 – Feb 2026
       </p>
 
-      <div className="mt-6 mb-6 max-w-xl">
-        <div className="relative rounded-xl border-2 border-gray-200 bg-white shadow-md shadow-gray-200/50 focus-within:border-brand-blue focus-within:shadow-[0_0_0_4px_rgba(26,63,105,0.12)] focus-within:ring-0 transition-all duration-200 overflow-hidden">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-orange" aria-hidden />
-          <div className="flex items-center gap-3 pl-5 pr-4 py-3">
-            <FaSearch className="shrink-0 text-brand-blue/70 text-lg" aria-hidden />
-            <input
-              type="text"
-              placeholder="Search by title or section (e.g. State of AI, Model Updates)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 min-w-0 py-1 text-base font-plex text-primary placeholder:text-subtitle bg-transparent border-0 focus:outline-none focus:ring-0"
-              aria-label="Search documents by title or section"
-            />
-          </div>
+      <div className="mt-6 mb-6">
+        <div className="relative w-full max-w-2xl">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+          <input
+            type="text"
+            placeholder="Search by title or section (e.g. State of AI, Model Updates)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input w-full pl-11 pr-4 py-2.5 text-sm font-plex text-primary bg-white rounded-lg border border-gray-200"
+            aria-label="Search documents by title or section"
+          />
         </div>
-        <p className="mt-2 text-sm text-subtitle font-plex">
-          Matches document titles and section names (e.g. State of AI, Coding Agents, Enterprise).
-        </p>
       </div>
 
       {filteredDocumentsWithGroup.length === 0 ? (
@@ -220,9 +231,9 @@ const DocumentsPage = () => {
                                 return (
                                   <li
                                     key={doc.id}
-                                    className="flex flex-nowrap items-center gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                                    className="flex flex-wrap items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
                                   >
-                                    <span className="text-base text-primary font-plex shrink-0">
+                                    <span className="min-w-0 text-lg text-primary font-plex">
                                       {doc.title} — {displayDate}
                                     </span>
                                     {fileUrl && (
@@ -231,19 +242,19 @@ const DocumentsPage = () => {
                                           href={fileUrl}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-xs font-medium"
+                                          className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-sm font-medium"
                                         >
                                           <FaExternalLinkAlt size={10} />
                                           View
                                         </a>
-                                        <a
-                                          href={fileUrl}
-                                          download
-                                          className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-xs font-medium"
+                                        <button
+                                          type="button"
+                                          onClick={() => downloadDocument(fileUrl, doc.title)}
+                                          className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
                                         >
                                           <FaDownload size={10} />
                                           Download
-                                        </a>
+                                        </button>
                                       </span>
                                     )}
                                   </li>
@@ -264,19 +275,23 @@ const DocumentsPage = () => {
                             return (
                               <li
                                 key={doc.id}
-                                className="flex flex-nowrap items-center gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                                className="flex flex-wrap items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
                               >
-                                <span className="text-base text-primary font-plex shrink-0">
+                                <span className="min-w-0 text-lg text-primary font-plex">
                                   {doc.title} — {displayDate}
                                 </span>
                                 {fileUrl && (
                                   <span className="flex shrink-0 items-center gap-2">
-                                    <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-xs font-medium">
+                                    <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-sm font-medium">
                                       <FaExternalLinkAlt size={10} /> View
                                     </a>
-                                    <a href={fileUrl} download className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-xs font-medium">
+                                    <button
+                                      type="button"
+                                      onClick={() => downloadDocument(fileUrl, doc.title)}
+                                      className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
+                                    >
                                       <FaDownload size={10} /> Download
-                                    </a>
+                                    </button>
                                   </span>
                                 )}
                               </li>
@@ -297,9 +312,9 @@ const DocumentsPage = () => {
                         return (
                           <li
                             key={doc.id}
-                            className="flex flex-nowrap items-center gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                            className="flex flex-wrap items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
                           >
-                            <span className="text-base text-primary font-plex min-w-0 truncate">
+                            <span className="min-w-0 text-lg text-primary font-plex">
                               {doc.title} — {displayDate}
                             </span>
                             {fileUrl && (
@@ -308,19 +323,19 @@ const DocumentsPage = () => {
                                   href={fileUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-xs font-medium"
+                                  className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-sm font-medium"
                                 >
                                   <FaExternalLinkAlt size={10} />
                                   View
                                 </a>
-                                <a
-                                  href={fileUrl}
-                                  download
-                                  className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-xs font-medium"
+                                <button
+                                  type="button"
+                                  onClick={() => downloadDocument(fileUrl, doc.title)}
+                                  className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
                                 >
                                   <FaDownload size={10} />
                                   Download
-                                </a>
+                                </button>
                               </span>
                             )}
                           </li>
