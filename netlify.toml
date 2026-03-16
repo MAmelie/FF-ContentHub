@@ -20,7 +20,7 @@
   to = "https://memberportal.feedforward.ai/:splat"
   status = 302
   force = true
-  conditions = {Host = ["comforting-liger-51a2a4.netlify.app"]}
+  conditions = {Host = ["ffmemberportal.netlify.app"]}
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
