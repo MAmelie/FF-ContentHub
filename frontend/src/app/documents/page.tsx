@@ -201,14 +201,9 @@ const DocumentsPage = () => {
 
             return (
               <section key={group.id} id={group.id} className="scroll-mt-20">
-                <h2 className="text-xl font-bold text-brand-blue font-didot mb-1">
+                <h2 className="text-xl font-bold text-brand-blue font-didot mb-4">
                   {group.emoji} {group.title}
                 </h2>
-                {group.description && (
-                  <p className="text-base text-subtitle font-plex mb-4 max-w-2xl">
-                    {group.description}
-                  </p>
-                )}
                 {"subGroups" in bucket && bucket.subGroups ? (
                   <div className="space-y-5">
                     {Object.entries(bucket.subGroups)
