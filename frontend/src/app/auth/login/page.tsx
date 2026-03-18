@@ -20,7 +20,7 @@ export default function LoginPage() {
     // Check if user is already logged in
     const jwt = localStorage.getItem('jwt');
     if (jwt) {
-      router.push('/');
+      router.push('/home');
     }
 
     // Fetch logo from Strapi; fallback image is used if this fails or image errors
@@ -69,13 +69,13 @@ export default function LoginPage() {
           </div>
           
           <h1 className="mb-2 text-2xl font-bold text-gray-900 font-didot">
-            FF Content Hub
+            FF Member Portal
           </h1>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 font-didot">
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 font-plex">
-            Use Discord to authenticate with FF Content Hub
+            Use Discord to authenticate with FF Member Portal
           </p>
         </div>
         
@@ -83,7 +83,7 @@ export default function LoginPage() {
           <button
             onClick={handleDiscordLogin}
             disabled={isLoading}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-brand-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? (
               <span className="flex items-center">

@@ -61,8 +61,8 @@ function DiscordRedirectContent() {
         
         setText('You have been successfully logged in. You will be redirected in a few seconds...');
         
-        // Redirect to homepage after 3 seconds; use canonical URL so the bar shows the desired domain (e.g. memberportal.feedforward.ai)
-        const redirectPath = '/';
+        // Redirect to personalized home after 3 seconds; use canonical URL so the bar shows the desired domain (e.g. memberportal.feedforward.ai)
+        const redirectPath = '/home';
         setTimeout(() => {
           if (CANONICAL_APP_URL && typeof window !== 'undefined' && window.location.origin !== new URL(CANONICAL_APP_URL).origin) {
             window.location.href = `${CANONICAL_APP_URL}${redirectPath}`;
