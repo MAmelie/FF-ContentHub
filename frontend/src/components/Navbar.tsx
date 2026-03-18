@@ -120,6 +120,7 @@ const Navbar = () => {
   };
 
   const isContentHubActive = pathname === "/" || pathname.startsWith("/tiles/") || pathname === "/podcasts";
+  const isForYouActive = pathname === "/home";
   const isExpertNetActive = pathname === "/expert-net" || pathname.startsWith("/expert-net/");
 
   return (
@@ -151,6 +152,19 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-6">
+          {/* For You link */}
+          <Link
+            href="/home"
+            className={`relative inline-flex items-center text-base font-plex transition-colors duration-200 pb-0.5 ${
+              isForYouActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
+            }`}
+          >
+            For You
+            {isForYouActive && (
+              <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
+            )}
+          </Link>
+
           {/* Content Hub dropdown */}
           <div className="relative">
             <button
