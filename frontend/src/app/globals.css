@@ -302,6 +302,65 @@ main {
   transform: scale(1.06);
 }
 
+/* ── Home (personalized) recommendation cards ─── */
+.home-recommendation-card {
+  position: relative;
+  background: #fff;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 16px rgba(26, 63, 105, 0.07);
+  transition:
+    transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.35s ease;
+  border: 1px solid rgba(26, 63, 105, 0.06);
+}
+
+.home-recommendation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(26, 63, 105, 0.12);
+}
+
+.home-recommendation-card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--brand-orange);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 1;
+}
+
+.home-recommendation-card:hover::after {
+  transform: scaleX(1);
+}
+
+.home-recommendation-card__thumb {
+  height: 7rem;
+  width: 100%;
+  background: linear-gradient(
+    135deg,
+    var(--brand-blue) 0%,
+    #2a5285 50%,
+    rgba(83, 108, 137, 0.85) 100%
+  );
+  position: relative;
+}
+
+/* ── Home portal CTA block ───────────────────── */
+.home-portal-cta {
+  background: linear-gradient(
+    135deg,
+    var(--brand-blue) 0%,
+    #244a7a 100%
+  );
+  box-shadow: 0 8px 32px rgba(26, 63, 105, 0.2);
+}
+
 /* ── Gradient Divider ────────────────────────── */
 .gradient-divider {
   height: 2px;
