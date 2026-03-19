@@ -86,6 +86,13 @@ export const MEMBER_SESSION_GROUPS: ThematicGroup[] = [
           "skills repositories",
         ],
       },
+      {
+        id: "in-person-hybrid",
+        title: "In-Person / Hybrid",
+        // Optional: these patterns are used by `assignToThematicGroup` (if enabled later).
+        // `documents/page.tsx` primarily matches by `sessionSubGroup` from Strapi.
+        patterns: ["In-Person / Hybrid", "in-person-hybrid", "In-Person", "Hybrid"],
+      },
     ],
   },
   {
@@ -105,11 +112,32 @@ export const MEMBER_SESSION_GROUPS: ThematicGroup[] = [
       "Private Bank AI Coach",
       "Show-and-Tell — JPMC",
     ],
+    subGroups: [
+      {
+        id: "expert-show-and-tell",
+        title: "Expert Show-and-Tell",
+        patterns: ["expert-show-and-tell", "Expert Show-and-Tell", "Show-and-Tell"],
+      },
+      {
+        id: "leading-ai-transformation",
+        title: "Leading AI Transformation",
+        patterns: ["leading-ai-transformation", "Leading AI Transformation", "Leading Through AI Transformation"],
+      },
+      {
+        id: "member-and-expert-show-and-tell",
+        title: "Member and Expert Show-and-Tell",
+        patterns: [
+          "member-and-expert-show-and-tell",
+          "Member and Expert Show-and-Tell",
+          "Member Show-and-Tell",
+        ],
+      },
+    ],
   },
   {
     id: "agentic-technical",
     emoji: "🦾",
-    title: "Agentic AI, Coding & Technical Practice",
+    title: "Agentic AI & Software Development",
     description:
       "Hands-on, demo-forward sessions on building and deploying agentic systems. Includes tool launches and live builds.",
     patterns: [

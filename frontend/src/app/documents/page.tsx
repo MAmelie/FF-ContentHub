@@ -25,6 +25,18 @@ function formatSessionDate(iso?: string | null): string {
   });
 }
 
+function normalizeSubGroupId(id: string): string {
+  // Strapi subgroup values are stored as strings; depending on how you created the
+  // admin selections they might include spaces/slashes. Normalize both sides so
+  // grouping stays stable.
+  return id
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 /** Trigger download via blob so cross-origin PDFs download instead of opening in-browser. */
 async function downloadDocument(url: string, filename: string) {
   try {
@@ -85,7 +97,7 @@ const DocumentsPage = () => {
       const group = MEMBER_SESSION_GROUPS.find((g) => g.id === effectiveGroup);
       if (group?.title.toLowerCase().includes(q) || group?.description?.toLowerCase().includes(q)) return true;
       if (doc.sessionSubGroup && group?.subGroups) {
-        const sg = group.subGroups.find((s) => s.id === doc.sessionSubGroup);
+        const sg = group.subGroups.find((s) => normalizeSubGroupId(s.id) === normalizeSubGroupId(doc.sessionSubGroup));
         if (sg?.title.toLowerCase().includes(q)) return true;
       }
       return false;
@@ -119,8 +131,13 @@ const DocumentsPage = () => {
         const subGroups: Record<string, Document[]> = {};
         const directInGroup: Document[] = [];
         for (const doc of docsInGroup) {
-          if (doc.sessionSubGroup && group.subGroups.some((sg) => sg.id === doc.sessionSubGroup)) {
-            const id = doc.sessionSubGroup!;
+          const matchedSg =
+            doc.sessionSubGroup && group.subGroups.length > 0
+              ? group.subGroups.find((sg) => normalizeSubGroupId(sg.id) === normalizeSubGroupId(doc.sessionSubGroup))
+              : undefined;
+
+          if (matchedSg) {
+            const id = matchedSg.id; // Use config id so headings render correctly.
             if (!subGroups[id]) subGroups[id] = [];
             subGroups[id].push(doc);
           } else {
