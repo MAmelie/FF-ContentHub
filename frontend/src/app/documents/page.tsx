@@ -97,7 +97,8 @@ const DocumentsPage = () => {
       const group = MEMBER_SESSION_GROUPS.find((g) => g.id === effectiveGroup);
       if (group?.title.toLowerCase().includes(q) || group?.description?.toLowerCase().includes(q)) return true;
       if (doc.sessionSubGroup && group?.subGroups) {
-        const sg = group.subGroups.find((s) => normalizeSubGroupId(s.id) === normalizeSubGroupId(doc.sessionSubGroup));
+        const subGroupId = doc.sessionSubGroup;
+        const sg = group.subGroups.find((s) => normalizeSubGroupId(s.id) === normalizeSubGroupId(subGroupId));
         if (sg?.title.toLowerCase().includes(q)) return true;
       }
       return false;
@@ -131,13 +132,19 @@ const DocumentsPage = () => {
         const subGroups: Record<string, Document[]> = {};
         const directInGroup: Document[] = [];
         for (const doc of docsInGroup) {
-          const matchedSg =
-            doc.sessionSubGroup && group.subGroups.length > 0
-              ? group.subGroups.find((sg) => normalizeSubGroupId(sg.id) === normalizeSubGroupId(doc.sessionSubGroup))
-              : undefined;
+          const subGroupId = doc.sessionSubGroup;
+          let matchedSubGroupId: string | undefined;
+          if (subGroupId && group.subGroups.length > 0) {
+            for (const configuredSubGroup of group.subGroups) {
+              if (normalizeSubGroupId(configuredSubGroup.id) === normalizeSubGroupId(subGroupId)) {
+                matchedSubGroupId = configuredSubGroup.id;
+                break;
+              }
+            }
+          }
 
-          if (matchedSg) {
-            const id = matchedSg.id; // Use config id so headings render correctly.
+          if (matchedSubGroupId) {
+            const id = matchedSubGroupId; // Use config id so headings render correctly.
             if (!subGroups[id]) subGroups[id] = [];
             subGroups[id].push(doc);
           } else {
