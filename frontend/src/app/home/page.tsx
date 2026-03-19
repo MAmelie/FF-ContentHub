@@ -28,8 +28,9 @@ const DISCORD_LINK_WRITING =
   "https://discord.com/channels/1254761492608188517/1254761493610758298/1483149245052616755";
 const DISCORD_LINK_SIMULATED =
   "https://discord.com/channels/1254761492608188517/1267576905125593272/1482238814951833813";
+const PODCAST_TITLE_MAPPING_FUTURE = "Mapping the Future: Tim O'Reilly on AI and Innovation";
 const PODCAST_LINK_MAPPING_FUTURE =
-  "/podcasts#episode-81";
+  `/podcasts#episode-title-${encodeURIComponent(PODCAST_TITLE_MAPPING_FUTURE)}`;
 
 const RECOMMENDED_ITEMS: RecommendationItem[] = [
   {
@@ -52,9 +53,9 @@ const RECOMMENDED_ITEMS: RecommendationItem[] = [
   {
     id: "rec-4",
     source: "podcasts",
-    text: "Mapping the Future: Tim O'Reilly on AI and Innovation",
+    text: PODCAST_TITLE_MAPPING_FUTURE,
     linkInText: {
-      phrase: "Mapping the Future: Tim O'Reilly on AI and Innovation",
+      phrase: PODCAST_TITLE_MAPPING_FUTURE,
       href: PODCAST_LINK_MAPPING_FUTURE,
     },
   },

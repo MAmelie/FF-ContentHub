@@ -25,7 +25,9 @@ const PodcastsPage = () => {
   const shareEpisode = useCallback(async (podcast: Document) => {
     if (typeof window === "undefined") return;
     const base = window.location.origin + window.location.pathname;
-    const url = `${base}#episode-${podcast.id}`;
+    const url = podcast.title
+      ? `${base}#episode-title-${encodeURIComponent(podcast.title)}`
+      : `${base}#episode-${podcast.id}`;
     const title = podcast.title ? `${podcast.title} – Feedforward Podcasts` : "Feedforward Podcasts";
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
@@ -94,10 +96,32 @@ const PodcastsPage = () => {
   useEffect(() => {
     if (typeof window === "undefined" || !podcastDocs.length) return;
     const hash = window.location.hash;
-    const match = hash && hash.startsWith("#episode-") ? hash.slice("#episode-".length) : null;
-    if (match) {
-      // Strapi may return document ids as either number or string (differs by env).
-      // Normalize by comparing as strings, then store the real id value for correct strict equality later.
+    if (!hash) return;
+
+    // Preferred: open by stable title hash (cross-environment)
+    if (hash.startsWith("#episode-title-")) {
+      const encoded = hash.slice("#episode-title-".length);
+      let decodedTitle = encoded;
+      try {
+        decodedTitle = decodeURIComponent(encoded);
+      } catch {
+        // keep encoded fallback
+      }
+
+      const foundPodcast = podcastDocs.find((p) => p.title === decodedTitle);
+      if (foundPodcast) {
+        setExpandedId(foundPodcast.id);
+        setSearchQuery("");
+        setTimeout(() => {
+          document.getElementById(`episode-${foundPodcast.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+      }
+      return;
+    }
+
+    // Legacy fallback: open by Strapi document id (#episode-123)
+    if (hash.startsWith("#episode-")) {
+      const match = hash.slice("#episode-".length);
       const foundPodcast = podcastDocs.find((p) => String(p.id) === String(match));
       if (foundPodcast) {
         setExpandedId(foundPodcast.id);
