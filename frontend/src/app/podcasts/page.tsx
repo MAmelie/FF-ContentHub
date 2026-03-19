@@ -96,13 +96,14 @@ const PodcastsPage = () => {
     const hash = window.location.hash;
     const match = hash && hash.startsWith("#episode-") ? hash.slice("#episode-".length) : null;
     if (match) {
-      const id = /^\d+$/.test(match) ? Number(match) : match;
-      const found = podcastDocs.some((p) => p.id === id);
-      if (found) {
-        setExpandedId(id);
+      // Strapi may return document ids as either number or string (differs by env).
+      // Normalize by comparing as strings, then store the real id value for correct strict equality later.
+      const foundPodcast = podcastDocs.find((p) => String(p.id) === String(match));
+      if (foundPodcast) {
+        setExpandedId(foundPodcast.id);
         setSearchQuery("");
         setTimeout(() => {
-          document.getElementById(`episode-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+          document.getElementById(`episode-${foundPodcast.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 100);
       }
     }
