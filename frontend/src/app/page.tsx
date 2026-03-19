@@ -141,7 +141,7 @@ function HomeContent() {
         {!loading && !error && (
           <>
             {/* ─── Hero Section ───────────────────────── */}
-            <section className="mb-16 card-animate-in">
+            <section className="mb-6 card-animate-in">
               <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
                 {/* FFC Mark (gold) from Strapi: second logo = gold mark, else first logo */}
                 {logo?.logo?.length ? (
@@ -163,7 +163,7 @@ function HomeContent() {
                   <h1 className="text-3xl md:text-4xl font-semibold text-brand-blue font-didot mb-3">
                     {userName ? `Welcome back, ${userName}!` : "Welcome to Feedforward!"}
                   </h1>
-                  <p className="text-lg md:text-xl text-subtitle leading-relaxed max-w-xl font-plex mb-6">
+                  <p className="text-lg md:text-xl text-subtitle leading-relaxed max-w-xl font-plex mb-3">
                     Here is your Feedforward content portal. Feel free to share.
                   </p>
                   {hero?.description && !/lorem\s+ipsum/i.test(hero.description.trim()) && (
@@ -176,7 +176,7 @@ function HomeContent() {
             </section>
 
             {/* ─── Gradient Divider ───────────────────── */}
-            <div className="gradient-divider mb-14" />
+            <div className="gradient-divider mb-8" />
 
             {/* ─── Row 1: Content (Meeting readoutss, Podcasts, additional content) ───────────────────── */}
             {contentTiles.length > 0 && (
@@ -195,7 +195,7 @@ function HomeContent() {
                     {contentTiles.map((tile, idx) => renderTileCard(tile, idx, "bg-brand-blue"))}
                   </div>
                 </section>
-                <div className="gradient-divider mb-14" />
+                <div className="gradient-divider mb-8" />
               </>
             )}
 
@@ -216,7 +216,7 @@ function HomeContent() {
                     {toolTiles.map((tile, idx) => renderTileCard(tile, idx, "bg-brand-blue"))}
                   </div>
                 </section>
-                <div className="gradient-divider mb-14" />
+                <div className="gradient-divider mb-8" />
               </>
             )}
 

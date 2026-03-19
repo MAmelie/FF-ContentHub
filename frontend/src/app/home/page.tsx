@@ -28,6 +28,8 @@ const DISCORD_LINK_WRITING =
   "https://discord.com/channels/1254761492608188517/1254761493610758298/1483149245052616755";
 const DISCORD_LINK_SIMULATED =
   "https://discord.com/channels/1254761492608188517/1267576905125593272/1482238814951833813";
+const PODCAST_LINK_MAPPING_FUTURE =
+  "/podcasts#episode-81";
 
 const RECOMMENDED_ITEMS: RecommendationItem[] = [
   {
@@ -50,7 +52,11 @@ const RECOMMENDED_ITEMS: RecommendationItem[] = [
   {
     id: "rec-4",
     source: "podcasts",
-    text: "Mapping the Future: Tim O'Reilly on AI and Innovation (link to podcast)",
+    text: "Mapping the Future: Tim O'Reilly on AI and Innovation",
+    linkInText: {
+      phrase: "Mapping the Future: Tim O'Reilly on AI and Innovation",
+      href: PODCAST_LINK_MAPPING_FUTURE,
+    },
   },
 ];
 
@@ -96,18 +102,29 @@ export default function HomePage() {
       return item.text;
     }
     const [before, after] = item.text.split(item.linkInText.phrase);
+    const isInternalLink = item.linkInText.href.startsWith("/");
     return (
       <>
         {before}
-        <a
-          href={item.linkInText.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-brand-blue font-medium underline decoration-brand-blue/50 hover:decoration-brand-blue"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {item.linkInText.phrase}
-        </a>
+        {isInternalLink ? (
+          <Link
+            href={item.linkInText.href}
+            className="text-brand-blue font-medium underline decoration-brand-blue/50 hover:decoration-brand-blue"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {item.linkInText.phrase}
+          </Link>
+        ) : (
+          <a
+            href={item.linkInText.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-blue font-medium underline decoration-brand-blue/50 hover:decoration-brand-blue"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {item.linkInText.phrase}
+          </a>
+        )}
         {after}
       </>
     );
@@ -135,7 +152,7 @@ export default function HomePage() {
 
       <div className="relative max-w-6xl mx-auto px-6 pt-10 pb-16">
         {/* ─── Personalized header ───────────────────────── */}
-        <section className="mb-16 card-animate-in">
+        <section className="mb-8 card-animate-in">
           <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
             {/* Logo commented out for now.
             {logo?.logo?.length && !logoLoadFailed && process.env.NEXT_PUBLIC_STRAPI_URL ? (
@@ -177,7 +194,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <div className="gradient-divider mb-14" />
+        <div className="gradient-divider mb-8" />
 
         {/* ─── Latest for you ───────────────────────────── */}
         <section id="latest-for-you" className="mb-16">
@@ -208,12 +225,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ─── Previous for you ───────────────────────────── */}
+        {/* ─── Previous ───────────────────────────── */}
         <section id="previous-for-you" className="mb-16">
           <header className="mb-8">
             <h2 className="flex items-center gap-3 text-2xl font-bold mb-1 font-didot text-brand-blue">
               <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
-              Previous for you
+              Previous
             </h2>
             <p className="text-sm text-subtitle font-plex">
               Earlier recommendations will appear here.
@@ -235,7 +252,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <div className="gradient-divider mb-14" />
+        <div className="gradient-divider mb-8" />
 
         {/* ─── Go to member portal CTA (entire block clickable) ───────────── */}
         <button
