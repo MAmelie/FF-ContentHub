@@ -178,7 +178,7 @@ const DocumentsPage = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="max-w-6xl mx-auto px-6 py-10">
       <BackToHome />
 
       <h1 className="text-3xl leading-snug font-bold text-brand-blue font-didot">
@@ -250,13 +250,13 @@ const DocumentsPage = () => {
                                 return (
                                   <li
                                     key={doc.id}
-                                    className="flex items-start justify-between gap-3 py-1.5 border-b border-gray-100 last:border-b-0"
+                                    className="flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
                                   >
-                                    <span className="min-w-0 flex-1 text-lg text-primary font-plex">
+                                    <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
                                       {doc.title} — {displayDate}
                                     </span>
                                     {fileUrl && (
-                                      <span className="flex shrink-0 flex-nowrap items-center gap-2 whitespace-nowrap">
+                                      <span className="flex shrink-0 items-center gap-2">
                                         <a
                                           href={fileUrl}
                                           target="_blank"
@@ -294,13 +294,13 @@ const DocumentsPage = () => {
                             return (
                               <li
                                 key={doc.id}
-                                className="flex items-start justify-between gap-3 py-1.5 border-b border-gray-100 last:border-b-0"
+                                className="flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
                               >
-                                <span className="min-w-0 flex-1 text-lg text-primary font-plex">
+                                <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
                                   {doc.title} — {displayDate}
                                 </span>
                                 {fileUrl && (
-                                  <span className="flex shrink-0 flex-nowrap items-center gap-2 whitespace-nowrap">
+                                  <span className="flex shrink-0 items-center gap-2">
                                     <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-sm font-medium">
                                       <FaExternalLinkAlt size={10} /> View
                                     </a>
@@ -331,13 +331,13 @@ const DocumentsPage = () => {
                         return (
                           <li
                             key={doc.id}
-                            className="flex items-start justify-between gap-3 py-1.5 border-b border-gray-100 last:border-b-0"
+                            className="flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
                           >
-                            <span className="min-w-0 flex-1 text-lg text-primary font-plex">
+                            <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
                               {doc.title} — {displayDate}
                             </span>
                             {fileUrl && (
-                              <span className="flex shrink-0 flex-nowrap items-center gap-2 whitespace-nowrap">
+                              <span className="flex shrink-0 items-center gap-2">
                                 <a
                                   href={fileUrl}
                                   target="_blank"
