@@ -28,6 +28,12 @@ const DISCORD_LINK_WRITING =
   "https://discord.com/channels/1254761492608188517/1254761493610758298/1483149245052616755";
 const DISCORD_LINK_SIMULATED =
   "https://discord.com/channels/1254761492608188517/1267576905125593272/1482238814951833813";
+const DISCORD_LINK_GEN_AI_PHILOSOPHY =
+  "https://discord.com/channels/1254761492608188517/1267576905125593272/1481451707220099143";
+const DISCORD_LINK_ETHAN_TAKE =
+  "https://discord.com/channels/1254761492608188517/1254761493610758298/1483529961007747183";
+const MEMBER_SESSION_RECRUITING_READOUT =
+  "https://strapi-be-production-5b58.up.railway.app/uploads/Readout_Feedforward_Member_Session_Recruiting_to_Power_AI_Transformation_3_17_2026_docx_1_1_6d4c8076c9.pdf";
 const PODCAST_TITLE_MAPPING_FUTURE = "Mapping the Future: Tim O'Reilly on AI and Innovation";
 const PODCAST_LINK_MAPPING_FUTURE =
   `/podcasts#episode-title-${encodeURIComponent(PODCAST_TITLE_MAPPING_FUTURE)}`;
@@ -42,13 +48,17 @@ const RECOMMENDED_ITEMS: RecommendationItem[] = [
   {
     id: "rec-2",
     source: "discord",
-    text: "A simulated organization for understanding human vs agent behavior in real-world scenarios",
+    text: "A simulated organization for understanding human vs agent behavior in real-world scenarios.",
     linkInText: { phrase: "simulated organization", href: DISCORD_LINK_SIMULATED },
   },
   {
     id: "rec-3",
     source: "memberSessions",
-    text: "Guidance for hiring in the AI-era, including how to surface core traits like agency, learning velocity and first principles thinking (3.17.2026 Member Session: Recruiting to Power AI Transformation)",
+    text: "Guidance for hiring in the AI-era, including how to surface core traits like agency, learning velocity and first principles thinking.",
+    linkInText: {
+      phrase: "Guidance for hiring in the AI-era",
+      href: MEMBER_SESSION_RECRUITING_READOUT,
+    },
   },
   {
     id: "rec-4",
@@ -58,6 +68,21 @@ const RECOMMENDED_ITEMS: RecommendationItem[] = [
       phrase: PODCAST_TITLE_MAPPING_FUTURE,
       href: PODCAST_LINK_MAPPING_FUTURE,
     },
+  },
+];
+
+const PREVIOUS_ITEMS: RecommendationItem[] = [
+  {
+    id: "prev-1",
+    source: "discord",
+    text: "Read how one member now includes their Gen AI philosophy as a pillar of operational excellence in their annual report.",
+    linkInText: { phrase: "Gen AI philosophy", href: DISCORD_LINK_GEN_AI_PHILOSOPHY },
+  },
+  {
+    id: "prev-2",
+    source: "discord",
+    text: "Check out Ethan's take on which tool excels: ChatGPT, Claude or Microsoft Agent.",
+    linkInText: { phrase: "Ethan's take", href: DISCORD_LINK_ETHAN_TAKE },
   },
 ];
 
@@ -238,15 +263,17 @@ export default function HomePage() {
             </p>
           </header>
           <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, idx) => (
+            {PREVIOUS_ITEMS.map((item, idx) => (
               <button
-                key={idx}
+                key={item.id}
                 type="button"
-                disabled
-                className="w-full text-left rounded-xl border border-brand-blue/10 bg-white/60 opacity-60 cursor-not-allowed px-4 py-3 shadow-sm"
+                onClick={() => handleRecommendationClick(item)}
+                className="w-full text-left rounded-xl border border-brand-blue/10 bg-white/70 hover:bg-white transition-colors px-4 py-3 shadow-sm"
+                style={{ "--delay": `${idx * 60}ms` } as React.CSSProperties}
               >
-                <p className="text-primary/70 font-plex leading-relaxed">
-                  <span>{idx + 1}.</span> Placeholder {idx + 1}
+                <p className="text-primary font-plex leading-relaxed">
+                  <span>{idx + 1}.</span>{" "}
+                  {renderItemText(item)}
                 </p>
               </button>
             ))}
