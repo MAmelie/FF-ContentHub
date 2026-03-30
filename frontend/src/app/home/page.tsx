@@ -227,7 +227,7 @@ export default function HomePage() {
           <header className="mb-8">
             <h2 className="flex items-center gap-3 text-2xl font-bold mb-1 font-didot text-brand-blue">
               <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
-              Latest for you
+              New and relevant for you
             </h2>
             <p className="text-sm text-subtitle font-plex">
               Check out our recommendations.

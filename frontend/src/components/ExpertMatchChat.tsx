@@ -74,7 +74,7 @@ function recommendExperts(
 export type ChatMessage = { role: "user" | "assistant"; content: string; experts?: ExpertBio[] };
 
 const INTRO_MESSAGE =
-  "Hi! I'm here to help match you with the right expert. What challenges are you facing or what would you like to accomplish with our experts?";
+  "Hi! I'm here to help match you with the right expert. What challenges are you facing or what would you like to accomplish with an expert advisory session?";
 
 interface ExpertMatchChatProps {
   experts: ExpertBio[];
