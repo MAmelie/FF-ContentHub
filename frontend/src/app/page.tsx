@@ -97,7 +97,7 @@ function HomeContent() {
       style={{ "--delay": `${idx * 80}ms` } as React.CSSProperties}
       onClick={() => handleTileClick(tile)}
     >
-      <div className={`relative h-1/3 w-full overflow-hidden ${fallbackBg}`}>
+      <div className={`relative h-2/5 w-full overflow-hidden ${fallbackBg}`}>
         {tile.cover?.url && (
           <img
             src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${tile.cover.url}`}
@@ -107,7 +107,7 @@ function HomeContent() {
           />
         )}
       </div>
-      <div className="p-6 h-2/3">
+      <div className="p-6 h-3/5">
         <h3 className="text-lg font-semibold font-didot text-primary line-clamp-2">
           {tile.title}
         </h3>
