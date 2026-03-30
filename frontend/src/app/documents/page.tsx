@@ -5,7 +5,7 @@ import { getAllDocuments } from "../../../lib/api";
 import { Document } from "../../../lib/types";
 import Loader from "../../components/Loader";
 import BackToHome from "../../components/BackToHome";
-import { FaSearch, FaExternalLinkAlt, FaDownload } from "react-icons/fa";
+import { FaSearch, FaDownload } from "react-icons/fa";
 import { MEMBER_SESSION_GROUPS } from "../tiles/member-sessions-config";
 
 function isPdfDocument(doc: Document): boolean {
@@ -188,7 +188,7 @@ const DocumentsPage = () => {
         Archive
       </p>
       <p className="mt-1 text-base text-subtitle font-plex">
-        Last updated: March 2026 &nbsp;&bull;&nbsp; Sessions from Jan 2025 – Feb 2026
+        Last updated: March 2026 &nbsp;&bull;&nbsp; Sessions from 2024  – March 2026
       </p>
 
       <div className="mt-6 mb-6">
@@ -250,22 +250,24 @@ const DocumentsPage = () => {
                                 return (
                                   <li
                                     key={doc.id}
-                                    className="flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                                    className="group flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                                   >
-                                    <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
-                                      {doc.title} — {displayDate}
-                                    </span>
+                                    {fileUrl ? (
+                                      <a
+                                        href={fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                                      >
+                                        {doc.title} — {displayDate}
+                                      </a>
+                                    ) : (
+                                      <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
+                                        {doc.title} — {displayDate}
+                                      </span>
+                                    )}
                                     {fileUrl && (
                                       <span className="flex shrink-0 items-center gap-2">
-                                        <a
-                                          href={fileUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-sm font-medium"
-                                        >
-                                          <FaExternalLinkAlt size={10} />
-                                          View
-                                        </a>
                                         <button
                                           type="button"
                                           onClick={() => downloadDocument(fileUrl, doc.title)}
@@ -294,16 +296,24 @@ const DocumentsPage = () => {
                             return (
                               <li
                                 key={doc.id}
-                                className="flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                                className="group flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                               >
-                                <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
-                                  {doc.title} — {displayDate}
-                                </span>
+                                {fileUrl ? (
+                                  <a
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                                  >
+                                    {doc.title} — {displayDate}
+                                  </a>
+                                ) : (
+                                  <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
+                                    {doc.title} — {displayDate}
+                                  </span>
+                                )}
                                 {fileUrl && (
                                   <span className="flex shrink-0 items-center gap-2">
-                                    <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-sm font-medium">
-                                      <FaExternalLinkAlt size={10} /> View
-                                    </a>
                                     <button
                                       type="button"
                                       onClick={() => downloadDocument(fileUrl, doc.title)}
@@ -331,22 +341,24 @@ const DocumentsPage = () => {
                         return (
                           <li
                             key={doc.id}
-                            className="flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0"
+                            className="group flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                           >
-                            <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
-                              {doc.title} — {displayDate}
-                            </span>
+                            {fileUrl ? (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                              >
+                                {doc.title} — {displayDate}
+                              </a>
+                            ) : (
+                              <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
+                                {doc.title} — {displayDate}
+                              </span>
+                            )}
                             {fileUrl && (
                               <span className="flex shrink-0 items-center gap-2">
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-brand-blue hover:text-brand-orange text-sm font-medium"
-                                >
-                                  <FaExternalLinkAlt size={10} />
-                                  View
-                                </a>
                                 <button
                                   type="button"
                                   onClick={() => downloadDocument(fileUrl, doc.title)}

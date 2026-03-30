@@ -29,7 +29,7 @@ export const MEMBER_SESSION_GROUPS: ThematicGroup[] = [
   {
     id: "ai-labs",
     emoji: "🤖",
-    title: "Conversations with AI Labs (Model Makers Series)",
+    title: "Conversations with AI Labs (Model Makers Series) and other special guests",
     description:
       "Direct, exclusive sessions with AI lab insiders. Your most differentiated content.",
     patterns: [
