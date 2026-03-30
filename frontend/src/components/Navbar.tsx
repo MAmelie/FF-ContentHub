@@ -155,7 +155,7 @@ const Navbar = () => {
           {/* For You link */}
           <Link
             href="/home"
-            className={`relative inline-flex items-center text-base font-plex transition-colors duration-200 pb-0.5 ${
+            className={`relative inline-flex items-center text-xl font-plex transition-colors duration-200 pb-0.5 ${
               isForYouActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
             }`}
           >
@@ -175,29 +175,29 @@ const Navbar = () => {
               }}
               aria-expanded={contentHubOpen}
               aria-haspopup="true"
-              className={`relative inline-flex items-center gap-1 text-base font-plex transition-colors duration-200 pb-0.5 ${
+              className={`relative inline-flex items-center gap-1 text-xl font-plex transition-colors duration-200 pb-0.5 ${
                 isContentHubActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
               }`}
             >
               Content Hub
-              <FaChevronDown className={`w-3.5 h-3.5 transition-transform ${contentHubOpen ? "rotate-180" : ""}`} />
+              <FaChevronDown className={`w-4 h-4 transition-transform ${contentHubOpen ? "rotate-180" : ""}`} />
               {isContentHubActive && (
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
               )}
             </button>
             {contentHubOpen && (
-              <div className="absolute top-full left-0 mt-1 min-w-[220px] rounded-lg bg-white shadow-xl border border-gray-100 py-2 z-[60]">
+              <div className="absolute top-full left-0 mt-2 min-w-[280px] rounded-lg bg-white shadow-xl border border-gray-100 py-3 z-[60]">
                 <Link
                   href="/"
                   onClick={() => setContentHubOpen(false)}
-                  className="block px-3 py-2 text-sm font-medium text-brand-blue hover:bg-peach/30 font-plex border-b border-gray-100"
+                  className="block px-4 py-2.5 text-lg font-medium text-brand-blue hover:bg-peach/30 font-plex border-b border-gray-100"
                 >
                   Content Hub
                 </Link>
                 {/* Row 1: Content (Meeting readoutss, Podcasts, additional content) */}
-                <div className="border-b border-gray-100 pb-2 mb-2">
+                <div className="border-b border-gray-100 pb-3 mb-3">
                   {contentTiles.length === 0 ? (
-                    <p className="px-3 py-1 text-sm text-gray-400">None</p>
+                    <p className="px-4 py-2 text-lg text-gray-400">None</p>
                   ) : (
                     contentTiles.map((tile) => {
                       const href = getTileHref(tile);
@@ -208,7 +208,7 @@ const Navbar = () => {
                           href={href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                          className="block px-4 py-2.5 text-lg text-brand-blue hover:bg-peach/30 font-plex"
                         >
                           {tile.title}
                         </a>
@@ -217,7 +217,7 @@ const Navbar = () => {
                           key={tile.id}
                           href={href}
                           onClick={() => setContentHubOpen(false)}
-                          className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                          className="block px-4 py-2.5 text-lg text-brand-blue hover:bg-peach/30 font-plex"
                         >
                           {tile.title}
                         </Link>
@@ -226,9 +226,9 @@ const Navbar = () => {
                   )}
                 </div>
                 {/* Row 2: Tools (Vendor Access, LibreChat) */}
-                <div className="pb-2">
+                <div className="pb-1">
                   {toolTiles.length === 0 ? (
-                    <p className="px-3 py-1 text-sm text-gray-400">None</p>
+                    <p className="px-4 py-2 text-lg text-gray-400">None</p>
                   ) : (
                     toolTiles.map((tile) => {
                       const href = getTileHref(tile);
@@ -239,7 +239,7 @@ const Navbar = () => {
                           href={href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                          className="block px-4 py-2.5 text-lg text-brand-blue hover:bg-peach/30 font-plex"
                         >
                           {tile.title}
                         </a>
@@ -248,7 +248,7 @@ const Navbar = () => {
                           key={tile.id}
                           href={href}
                           onClick={() => setContentHubOpen(false)}
-                          className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                          className="block px-4 py-2.5 text-lg text-brand-blue hover:bg-peach/30 font-plex"
                         >
                           {tile.title}
                         </Link>
@@ -270,27 +270,27 @@ const Navbar = () => {
               }}
               aria-expanded={expertNetOpen}
               aria-haspopup="true"
-              className={`relative inline-flex items-center gap-1 text-base font-plex transition-colors duration-200 pb-0.5 ${
+              className={`relative inline-flex items-center gap-1 text-xl font-plex transition-colors duration-200 pb-0.5 ${
                 isExpertNetActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
               }`}
             >
               Expert Network
-              <FaChevronDown className={`w-3.5 h-3.5 transition-transform ${expertNetOpen ? "rotate-180" : ""}`} />
+              <FaChevronDown className={`w-4 h-4 transition-transform ${expertNetOpen ? "rotate-180" : ""}`} />
               {isExpertNetActive && (
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
               )}
             </button>
             {expertNetOpen && (
-              <div className="absolute top-full left-0 mt-1 min-w-[220px] max-h-[70vh] overflow-y-auto rounded-lg bg-white shadow-xl border border-gray-100 py-2 z-[60]">
+              <div className="absolute top-full left-0 mt-2 min-w-[280px] max-h-[70vh] overflow-y-auto rounded-lg bg-white shadow-xl border border-gray-100 py-3 z-[60]">
                 <Link
                   href="/expert-net"
                   onClick={() => setExpertNetOpen(false)}
-                  className="block px-3 py-2 text-sm font-medium text-brand-blue hover:bg-peach/30 font-plex border-b border-gray-100"
+                  className="block px-4 py-2.5 text-lg font-medium text-brand-blue hover:bg-peach/30 font-plex border-b border-gray-100"
                 >
                   All Experts
                 </Link>
                 {expertBios.length === 0 ? (
-                  <p className="px-3 py-2 text-sm text-gray-400">No experts</p>
+                  <p className="px-4 py-2.5 text-lg text-gray-400">No experts</p>
                 ) : (
                   expertBios.map((bio) => {
                     const slug = expertSlug(bio);
@@ -299,7 +299,7 @@ const Navbar = () => {
                         key={bio.id}
                         href={`/expert-net/${slug}`}
                         onClick={() => setExpertNetOpen(false)}
-                        className="block px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                        className="block px-4 py-2.5 text-lg text-brand-blue hover:bg-peach/30 font-plex"
                       >
                         {bio.name}
                       </Link>
@@ -325,7 +325,7 @@ const Navbar = () => {
                   <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
                 )}
               </Link> */}
-              <span className="text-white/70 text-base font-plex">
+              <span className="text-white/70 text-xl font-plex">
                 Hi, {getDisplayName(user)}
               </span>
               <button
