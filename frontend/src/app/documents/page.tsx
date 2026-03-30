@@ -178,7 +178,7 @@ const DocumentsPage = () => {
     );
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       <BackToHome />
 
       <h1 className="text-3xl leading-snug font-bold text-brand-blue font-didot">
@@ -250,28 +250,28 @@ const DocumentsPage = () => {
                                 return (
                                   <li
                                     key={doc.id}
-                                    className="group flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
+                                    className="group flex min-w-0 flex-col sm:flex-row sm:items-start gap-y-1.5 sm:gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                                   >
                                     {fileUrl ? (
                                       <a
                                         href={fileUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                                        className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
                                       >
                                         {doc.title} — {displayDate}
                                       </a>
                                     ) : (
-                                      <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
+                                      <span className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
                                         {doc.title} — {displayDate}
                                       </span>
                                     )}
                                     {fileUrl && (
-                                      <span className="flex shrink-0 items-center gap-2">
+                                      <span className="flex shrink-0 items-center gap-2 sm:pt-0.5">
                                         <button
                                           type="button"
                                           onClick={() => downloadDocument(fileUrl, doc.title)}
-                                          className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
+                                          className="inline-flex items-center gap-1 whitespace-nowrap text-brand-orange hover:opacity-85 text-xs sm:text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
                                         >
                                           <FaDownload size={10} />
                                           Download
@@ -296,28 +296,28 @@ const DocumentsPage = () => {
                             return (
                               <li
                                 key={doc.id}
-                                className="group flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
+                                className="group flex min-w-0 flex-col sm:flex-row sm:items-start gap-y-1.5 sm:gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                               >
                                 {fileUrl ? (
                                   <a
                                     href={fileUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                                    className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
                                   >
                                     {doc.title} — {displayDate}
                                   </a>
                                 ) : (
-                                  <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
+                                  <span className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
                                     {doc.title} — {displayDate}
                                   </span>
                                 )}
                                 {fileUrl && (
-                                  <span className="flex shrink-0 items-center gap-2">
+                                  <span className="flex shrink-0 items-center gap-2 sm:pt-0.5">
                                     <button
                                       type="button"
                                       onClick={() => downloadDocument(fileUrl, doc.title)}
-                                      className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
+                                      className="inline-flex items-center gap-1 whitespace-nowrap text-brand-orange hover:opacity-85 text-xs sm:text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
                                     >
                                       <FaDownload size={10} /> Download
                                     </button>
@@ -341,28 +341,28 @@ const DocumentsPage = () => {
                         return (
                           <li
                             key={doc.id}
-                            className="group flex items-start gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
+                            className="group flex min-w-0 flex-col sm:flex-row sm:items-start gap-y-1.5 sm:gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                           >
                             {fileUrl ? (
                               <a
                                 href={fileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                                className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
                               >
                                 {doc.title} — {displayDate}
                               </a>
                             ) : (
-                              <span className="min-w-0 text-lg text-primary font-plex whitespace-nowrap overflow-hidden text-ellipsis">
+                              <span className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
                                 {doc.title} — {displayDate}
                               </span>
                             )}
                             {fileUrl && (
-                              <span className="flex shrink-0 items-center gap-2">
+                              <span className="flex shrink-0 items-center gap-2 sm:pt-0.5">
                                 <button
                                   type="button"
                                   onClick={() => downloadDocument(fileUrl, doc.title)}
-                                  className="inline-flex items-center gap-1 text-brand-orange hover:opacity-85 text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
+                                  className="inline-flex items-center gap-1 whitespace-nowrap text-brand-orange hover:opacity-85 text-xs sm:text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
                                 >
                                   <FaDownload size={10} />
                                   Download
