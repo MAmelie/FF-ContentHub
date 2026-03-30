@@ -142,11 +142,11 @@ const Navbar = () => {
               }
               alt=""
               role="presentation"
-              className="h-14 sm:h-16 w-auto"
+              className="h-12 sm:h-14 w-auto"
               onError={() => setLogoLoadFailed(true)}
             />
             <h1 className="font-semibold text-2xl sm:text-3xl text-white font-didot tracking-tight">
-              Feedforward Member Portal
+              Member Portal
             </h1>
           </Link>
         </div>
@@ -187,11 +187,15 @@ const Navbar = () => {
             </button>
             {contentHubOpen && (
               <div className="absolute top-full left-0 mt-1 min-w-[220px] rounded-lg bg-white shadow-xl border border-gray-100 py-2 z-[60]">
+                <Link
+                  href="/"
+                  onClick={() => setContentHubOpen(false)}
+                  className="block px-3 py-2 text-sm font-medium text-brand-blue hover:bg-peach/30 font-plex border-b border-gray-100"
+                >
+                  Content Hub
+                </Link>
                 {/* Row 1: Content (Meeting readoutss, Podcasts, additional content) */}
                 <div className="border-b border-gray-100 pb-2 mb-2">
-                  <p className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider font-plex">
-                    Content
-                  </p>
                   {contentTiles.length === 0 ? (
                     <p className="px-3 py-1 text-sm text-gray-400">None</p>
                   ) : (
@@ -223,9 +227,6 @@ const Navbar = () => {
                 </div>
                 {/* Row 2: Tools (Vendor Access, LibreChat) */}
                 <div className="pb-2">
-                  <p className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider font-plex">
-                    Tools
-                  </p>
                   {toolTiles.length === 0 ? (
                     <p className="px-3 py-1 text-sm text-gray-400">None</p>
                   ) : (
