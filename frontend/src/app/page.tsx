@@ -93,11 +93,11 @@ function HomeContent() {
   const renderTileCard = (tile: Tile, idx: number, fallbackBg: string) => (
     <div
       key={tile.id}
-      className="tile-card group card-animate-in"
+      className="tile-card group card-animate-in h-[20rem] flex flex-col"
       style={{ "--delay": `${idx * 80}ms` } as React.CSSProperties}
       onClick={() => handleTileClick(tile)}
     >
-      <div className={`relative h-56 w-full overflow-hidden ${fallbackBg}`}>
+      <div className={`relative h-1/3 w-full overflow-hidden ${fallbackBg}`}>
         {tile.cover?.url && (
           <img
             src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${tile.cover.url}`}
@@ -107,12 +107,12 @@ function HomeContent() {
           />
         )}
       </div>
-      <div className="p-6">
-        <h3 className="text-base font-semibold font-didot text-primary line-clamp-2">
+      <div className="p-6 h-2/3">
+        <h3 className="text-lg font-semibold font-didot text-primary line-clamp-2">
           {tile.title}
         </h3>
         {tile.description && (
-          <p className="text-secondary mt-2 text-sm leading-relaxed line-clamp-3 font-plex">
+          <p className="text-secondary mt-2 text-base leading-relaxed line-clamp-4 font-plex">
             {tile.description}
           </p>
         )}
