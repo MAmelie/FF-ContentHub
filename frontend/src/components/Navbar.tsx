@@ -126,6 +126,7 @@ const Navbar = () => {
   const isContentHubActive = pathname === "/" || pathname.startsWith("/tiles/") || pathname === "/podcasts";
   const isForYouActive = pathname === "/home";
   const isExpertNetActive = pathname === "/expert-net" || pathname.startsWith("/expert-net/");
+  const isAboutActive = pathname === "/about";
 
   return (
     <div
@@ -198,6 +199,14 @@ const Navbar = () => {
               }`}
             >
               For You
+            </Link>
+            <Link
+              href="/about"
+              className={`block rounded-md px-3 py-2 text-sm font-plex ${
+                isAboutActive ? "text-brand-orange bg-peach/30" : "text-brand-blue hover:bg-peach/30"
+              }`}
+            >
+              About Us
             </Link>
             <button
               type="button"
@@ -293,15 +302,26 @@ const Navbar = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 lg:gap-5">
             <Link
               href="/home"
-              className={`relative inline-flex items-center text-lg font-plex transition-colors duration-200 pb-0.5 ${
+              className={`relative inline-flex items-center text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
                 isForYouActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
               }`}
             >
               For You
               {isForYouActive && (
+                <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
+              )}
+            </Link>
+            <Link
+              href="/about"
+              className={`relative inline-flex items-center text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
+                isAboutActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
+              }`}
+            >
+              About Us
+              {isAboutActive && (
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
               )}
             </Link>
@@ -315,7 +335,7 @@ const Navbar = () => {
                 }}
                 aria-expanded={contentHubOpen}
                 aria-haspopup="true"
-                className={`relative inline-flex items-center gap-1 text-lg font-plex transition-colors duration-200 pb-0.5 ${
+                className={`relative inline-flex items-center gap-1 text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
                   isContentHubActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
                 }`}
               >
@@ -407,7 +427,7 @@ const Navbar = () => {
                 }}
                 aria-expanded={expertNetOpen}
                 aria-haspopup="true"
-                className={`relative inline-flex items-center gap-1 text-lg font-plex transition-colors duration-200 pb-0.5 ${
+                className={`relative inline-flex items-center gap-1 text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
                   isExpertNetActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
                 }`}
               >
@@ -454,7 +474,7 @@ const Navbar = () => {
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 bg-brand-orange hover:bg-amber-500 text-white px-3.5 py-2 rounded-lg text-base font-medium transition-colors duration-200"
+                  className="flex items-center gap-1.5 bg-brand-orange hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200"
                   title="Logout"
                 >
                   <FaSignOutAlt size={13} />
@@ -465,7 +485,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={() => setLoginModalOpen(true)}
-                className="bg-brand-orange hover:bg-amber-500 text-white px-3.5 py-2 rounded-lg text-base font-medium transition-colors duration-200"
+                className="bg-brand-orange hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200"
               >
                 Log in
               </button>

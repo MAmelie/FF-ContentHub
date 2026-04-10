@@ -1,6 +1,7 @@
 // lib/api.ts
 import axios, { AxiosInstance } from "axios";
 import { getAuthToken } from "./auth";
+import type { AboutPage, TeamMember } from "./types";
 
 // Use Strapi URL from env; in local dev fall back to localhost so the app works without .env
 const strapiUrl =
@@ -347,6 +348,79 @@ export const getExpertBySlug = async (slug: string) => {
     console.error("Error fetching expert by slug:", error);
     throw new Error("Server error");
   }
+};
+
+function normalizeTeamMember(raw: Record<string, unknown>): TeamMember {
+  const attrs = raw.attributes as Record<string, unknown> | undefined;
+  const orderRaw = raw.order ?? attrs?.order;
+  const order = typeof orderRaw === "number" && !Number.isNaN(orderRaw) ? orderRaw : null;
+  return {
+    id: (raw.id as number) ?? (raw.documentId as string) ?? 0,
+    order: order ?? undefined,
+    name: (raw.name as string) ?? (attrs?.name as string) ?? "",
+    slug: (raw.slug as string) ?? (attrs?.slug as string),
+    role: (raw.role as string) ?? (attrs?.role as string) ?? "",
+    bio: (raw.bio as string) ?? (attrs?.bio as string) ?? null,
+    team_group: (raw.team_group as TeamMember["team_group"]) ?? (attrs?.team_group as TeamMember["team_group"]),
+    active: (raw.active as boolean) ?? (attrs?.active as boolean) ?? true,
+    photo: normalizeMedia(raw.photo ?? attrs?.photo),
+    createdAt: (raw.createdAt as string) ?? (attrs?.createdAt as string) ?? "",
+    updatedAt: (raw.updatedAt as string) ?? (attrs?.updatedAt as string) ?? "",
+    publishedAt: (raw.publishedAt as string) ?? (attrs?.publishedAt as string) ?? "",
+  };
+}
+
+// Get About page content (single type) and populate team members with photos.
+export const getAboutPage = async (): Promise<AboutPage | null> => {
+  for (const path of [
+    "api/about-page?populate[hero_image]=true&populate[team_members][populate]=photo",
+    "api/about-pages?populate[hero_image]=true&populate[team_members][populate]=photo",
+  ]) {
+    try {
+      const response = await api.get(path);
+      const data = response.data?.data as Record<string, unknown> | undefined;
+      if (!data || typeof data !== "object") continue;
+
+      const attrs = data.attributes as Record<string, unknown> | undefined;
+      const rawMembers = (data.team_members ?? attrs?.team_members) as unknown;
+      const teamMembers = Array.isArray(rawMembers)
+        ? rawMembers
+        : Array.isArray((rawMembers as Record<string, unknown>)?.data)
+          ? (rawMembers as { data: Record<string, unknown>[] }).data
+          : [];
+
+      const team_members = teamMembers
+        .map((member: Record<string, unknown>) => normalizeTeamMember(member))
+        .filter((member) => member.active !== false)
+        .sort((a, b) => {
+          const groupA = a.team_group ?? "operations";
+          const groupB = b.team_group ?? "operations";
+          if (groupA !== groupB) return groupA.localeCompare(groupB);
+          const orderA = a.order ?? 999;
+          const orderB = b.order ?? 999;
+          if (orderA !== orderB) return orderA - orderB;
+          return (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
+        });
+
+      return {
+        id: (data.id as number) ?? (data.documentId as string) ?? 0,
+        title: (data.title as string) ?? (attrs?.title as string) ?? "",
+        subtitle: (data.subtitle as string) ?? (attrs?.subtitle as string),
+        intro: (data.intro as string) ?? (attrs?.intro as string),
+        mission: (data.mission as string) ?? (attrs?.mission as string),
+        hero_image: normalizeMedia(data.hero_image ?? attrs?.hero_image),
+        team_members,
+        createdAt: (data.createdAt as string) ?? (attrs?.createdAt as string) ?? "",
+        updatedAt: (data.updatedAt as string) ?? (attrs?.updatedAt as string) ?? "",
+        publishedAt: (data.publishedAt as string) ?? (attrs?.publishedAt as string) ?? "",
+      };
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) continue;
+      console.warn("About page not available (backend may be down):", err instanceof Error ? err.message : err);
+      return null;
+    }
+  }
+  return null;
 };
 
 // --- Appointments (expert booking) ---

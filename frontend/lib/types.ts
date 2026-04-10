@@ -96,6 +96,36 @@ export interface ExpertNet {
   publishedAt: string;
 }
 
+export type TeamGroup = "founding" | "core" | "advisory" | "operations";
+
+export interface TeamMember {
+  id: number | string;
+  order?: number | null;
+  name: string;
+  slug?: string;
+  role: string;
+  bio?: string | null;
+  team_group?: TeamGroup;
+  active?: boolean;
+  photo?: ImageData;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+}
+
+export interface AboutPage {
+  id: number | string;
+  title: string;
+  subtitle?: string;
+  intro?: string;
+  mission?: string;
+  hero_image?: ImageData;
+  team_members?: TeamMember[];
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+}
+
 export interface Document {
   id: number | string; // Strapi v5 uses documentId (string)
   title: string;
