@@ -200,14 +200,6 @@ const Navbar = () => {
             >
               For You
             </Link>
-            <Link
-              href="/about"
-              className={`block rounded-md px-3 py-2 text-sm font-plex ${
-                isAboutActive ? "text-brand-orange bg-peach/30" : "text-brand-blue hover:bg-peach/30"
-              }`}
-            >
-              About Us
-            </Link>
             <button
               type="button"
               onClick={() => setMobileContentOpen((v) => !v)}
@@ -277,6 +269,16 @@ const Navbar = () => {
                 })}
               </div>
             )}
+
+            <Link
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block rounded-md px-3 py-2 text-sm font-plex ${
+                isAboutActive ? "text-brand-orange bg-peach/30" : "text-brand-blue hover:bg-peach/30"
+              }`}
+            >
+              About Us
+            </Link>
           </div>
         )}
 
@@ -311,17 +313,6 @@ const Navbar = () => {
             >
               For You
               {isForYouActive && (
-                <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
-              )}
-            </Link>
-            <Link
-              href="/about"
-              className={`relative inline-flex items-center text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
-                isAboutActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
-              }`}
-            >
-              About Us
-              {isAboutActive && (
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
               )}
             </Link>
@@ -466,6 +457,22 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+
+            <Link
+              href="/about"
+              onClick={() => {
+                setContentHubOpen(false);
+                setExpertNetOpen(false);
+              }}
+              className={`relative inline-flex items-center text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
+                isAboutActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
+              }`}
+            >
+              About Us
+              {isAboutActive && (
+                <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
+              )}
+            </Link>
 
             {authenticated && user ? (
               <>
