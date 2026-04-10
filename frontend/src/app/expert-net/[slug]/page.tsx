@@ -1,7 +1,7 @@
 // app/expert-net/[slug]/page.tsx – individual expert profile page (linkable)
 "use client";
 
-import React, { useEffect, useState, use, useRef } from "react";
+import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { getExpertBySlug } from "../../../../lib/api";
 import { ExpertBio } from "../../../../lib/types";
@@ -9,11 +9,8 @@ import {
   getAdvisoryTopicsForExpert,
   AdvisoryTopic,
 } from "../../../../lib/expertAdvisoryTopics";
-import { isAuthenticated } from "../../../../lib/auth";
 import Loader from "@/components/Loader";
 import BackToHome from "@/components/BackToHome";
-import BookingForm from "@/components/BookingForm";
-import LoginModal from "@/components/LoginModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FaUser, FaArrowLeft, FaCalendarCheck } from "react-icons/fa";
@@ -124,14 +121,6 @@ export default function ExpertProfilePage({
   const [expert, setExpert] = useState<ExpertBio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const isLoggedIn = isAuthenticated();
-  const bookSectionRef = useRef<HTMLElement | null>(null);
-
-  const scrollToBooking = () => {
-    bookSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   useEffect(() => {
     const fetchExpert = async () => {
@@ -151,17 +140,6 @@ export default function ExpertProfilePage({
     };
     fetchExpert();
   }, [slug]);
-
-  useEffect(() => {
-    setAuthChecked(true);
-  }, []);
-
-  useEffect(() => {
-    if (!expert || !authChecked) return;
-    if (typeof window !== "undefined" && window.location.hash === "#book-session") {
-      setTimeout(() => scrollToBooking(), 300);
-    }
-  }, [expert, authChecked]);
 
   if (loading)
     return (
@@ -230,9 +208,9 @@ export default function ExpertProfilePage({
                     {expert.title}
                   </p>
                 </div>
+                {/* TODO: point to Calendly when ready */}
                 <button
                   type="button"
-                  onClick={scrollToBooking}
                   className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-medium text-white font-plex hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2"
                 >
                   <FaCalendarCheck size={14} /> Book session
@@ -267,30 +245,30 @@ export default function ExpertProfilePage({
           </section>
         )}
 
-        {/* Book a session */}
-        {authChecked && (
-          <section ref={bookSectionRef} id="book-session" className="mt-10 scroll-mt-6">
-            <h2 className="text-xl font-bold text-brand-blue font-didot mb-4 flex items-center gap-2">
-              <FaCalendarCheck /> Book a session
-            </h2>
-            {isLoggedIn ? (
-              <BookingForm expert={expert} />
-            ) : (
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                <p className="text-gray-700 font-plex mb-4">
-                  Log in to request an appointment with {expert.name}.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setLoginModalOpen(true)}
-                  className="rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white font-plex hover:bg-brand-blue/90 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2"
-                >
-                  Log in to request a session
-                </button>
-              </div>
-            )}
-          </section>
-        )}
+        {/* Book a session — intake form hidden until Calendly; orange CTA above stays for future link */}
+        {/*
+        <section ref={bookSectionRef} id="book-session" className="mt-10 scroll-mt-6">
+          <h2 className="text-xl font-bold text-brand-blue font-didot mb-4 flex items-center gap-2">
+            <FaCalendarCheck /> Book a session
+          </h2>
+          {isLoggedIn ? (
+            <BookingForm expert={expert} />
+          ) : (
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <p className="text-gray-700 font-plex mb-4">
+                Log in to request an appointment with {expert.name}.
+              </p>
+              <button
+                type="button"
+                onClick={() => setLoginModalOpen(true)}
+                className="rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-medium text-white font-plex hover:bg-brand-blue/90 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2"
+              >
+                Log in to request a session
+              </button>
+            </div>
+          )}
+        </section>
+        */}
 
         <Link
           href="/expert-net"
@@ -300,10 +278,6 @@ export default function ExpertProfilePage({
         </Link>
       </article>
 
-      <LoginModal
-        isOpen={loginModalOpen}
-        onClose={() => setLoginModalOpen(false)}
-      />
     </div>
   );
 }

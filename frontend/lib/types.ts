@@ -108,6 +108,8 @@ export interface TeamMember {
   team_group?: TeamGroup;
   active?: boolean;
   photo?: ImageData;
+  /** Full LinkedIn profile URL; shown as linked name on founding row when set. */
+  linkedin_url?: string | null;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;

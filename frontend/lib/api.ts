@@ -354,6 +354,8 @@ function normalizeTeamMember(raw: Record<string, unknown>): TeamMember {
   const attrs = raw.attributes as Record<string, unknown> | undefined;
   const orderRaw = raw.order ?? attrs?.order;
   const order = typeof orderRaw === "number" && !Number.isNaN(orderRaw) ? orderRaw : null;
+  const linkedinRaw = (raw.linkedin_url as string) ?? (attrs?.linkedin_url as string) ?? "";
+  const linkedin_url = typeof linkedinRaw === "string" && linkedinRaw.trim() !== "" ? linkedinRaw.trim() : null;
   return {
     id: (raw.id as number) ?? (raw.documentId as string) ?? 0,
     order: order ?? undefined,
@@ -364,6 +366,7 @@ function normalizeTeamMember(raw: Record<string, unknown>): TeamMember {
     team_group: (raw.team_group as TeamMember["team_group"]) ?? (attrs?.team_group as TeamMember["team_group"]),
     active: (raw.active as boolean) ?? (attrs?.active as boolean) ?? true,
     photo: normalizeMedia(raw.photo ?? attrs?.photo),
+    linkedin_url,
     createdAt: (raw.createdAt as string) ?? (attrs?.createdAt as string) ?? "",
     updatedAt: (raw.updatedAt as string) ?? (attrs?.updatedAt as string) ?? "",
     publishedAt: (raw.publishedAt as string) ?? (attrs?.publishedAt as string) ?? "",
@@ -375,10 +378,15 @@ export const getAboutPage = async (): Promise<AboutPage | null> => {
   for (const path of [
     "api/about-page?populate[hero_image]=true&populate[team_members][populate]=photo",
     "api/about-pages?populate[hero_image]=true&populate[team_members][populate]=photo",
+    "api/about-page?populate[hero_image]=true",
+    "api/about-pages?populate[hero_image]=true",
   ]) {
     try {
       const response = await api.get(path);
-      const data = response.data?.data as Record<string, unknown> | undefined;
+      const rawData = response.data?.data as unknown;
+      const data = Array.isArray(rawData)
+        ? (rawData[0] as Record<string, unknown> | undefined)
+        : (rawData as Record<string, unknown> | undefined);
       if (!data || typeof data !== "object") continue;
 
       const attrs = data.attributes as Record<string, unknown> | undefined;
@@ -389,7 +397,7 @@ export const getAboutPage = async (): Promise<AboutPage | null> => {
           ? (rawMembers as { data: Record<string, unknown>[] }).data
           : [];
 
-      const team_members = teamMembers
+      let team_members = teamMembers
         .map((member: Record<string, unknown>) => normalizeTeamMember(member))
         .filter((member) => member.active !== false)
         .sort((a, b) => {
@@ -401,6 +409,22 @@ export const getAboutPage = async (): Promise<AboutPage | null> => {
           if (orderA !== orderB) return orderA - orderB;
           return (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
         });
+
+      // Fallback: if about-page relation populate is blocked/missing, load team members directly.
+      if (team_members.length === 0) {
+        try {
+          const teamResponse = await api.get(
+            "api/team-members?populate=photo&filters[active][$eq]=true&sort[0]=team_group:asc&sort[1]=order:asc&sort[2]=name:asc&pagination[pageSize]=100"
+          );
+          const teamData = teamResponse.data?.data as unknown;
+          const teamList = Array.isArray(teamData) ? teamData : [];
+          team_members = teamList
+            .map((member) => normalizeTeamMember(member as Record<string, unknown>))
+            .filter((member) => member.active !== false);
+        } catch {
+          // Keep page content available even when team-members endpoint is restricted.
+        }
+      }
 
       return {
         id: (data.id as number) ?? (data.documentId as string) ?? 0,
@@ -415,7 +439,11 @@ export const getAboutPage = async (): Promise<AboutPage | null> => {
         publishedAt: (data.publishedAt as string) ?? (attrs?.publishedAt as string) ?? "",
       };
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) continue;
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        // Continue trying fallback routes if this path is blocked or invalid.
+        if (status === 400 || status === 403 || status === 404) continue;
+      }
       console.warn("About page not available (backend may be down):", err instanceof Error ? err.message : err);
       return null;
     }
