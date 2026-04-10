@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "team_members",
+  "info": {
+    "singularName": "team-member",
+    "pluralName": "team-members",
+    "displayName": "Team Member"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "order": {
+      "type": "integer",
+      "required": false
+    },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "role": {
+      "type": "string",
+      "required": true
+    },
+    "bio": {
+      "type": "richtext",
+      "required": false
+    },
+    "team_group": {
+      "type": "enumeration",
+      "required": true,
+      "default": "core",
+      "enum": ["founding", "core", "advisory", "operations"]
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    }
+  }
+}
