@@ -293,15 +293,14 @@ const AboutPageRoute = () => {
           if (!members || members.length === 0) return null;
 
           return (
-            <div
-              key={groupKey}
-              className={
-                groupKey === "founding"
-                  ? "mb-14 md:mb-18 lg:mb-20"
-                  : "mb-8 md:mb-10"
-              }
-            >
-              <header className="mb-3 md:mb-4">
+            <div key={groupKey} className="mb-8 md:mb-10">
+              <header
+                className={
+                  groupKey === "core"
+                    ? "mb-6 md:mb-9 lg:mb-10"
+                    : "mb-3 md:mb-4"
+                }
+              >
                 <h2 className="flex items-center gap-2.5 text-lg md:text-xl font-semibold font-didot text-brand-blue">
                   <span className="inline-block w-6 sm:w-8 h-0.5 sm:h-1 rounded-full bg-brand-orange shrink-0" />
                   {GROUP_LABELS[groupKey]}
