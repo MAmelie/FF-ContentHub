@@ -4,7 +4,7 @@ import BackToHome from "@/components/BackToHome";
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen bg-[#faf8f5] px-6 py-10 max-w-3xl mx-auto">
+    <div className="min-h-screen px-6 py-10 max-w-3xl mx-auto">
       <BackToHome />
       <h1 className="font-didot text-2xl font-bold text-brand-blue mb-4">
         Docs

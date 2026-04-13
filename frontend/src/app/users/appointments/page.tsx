@@ -87,7 +87,7 @@ export default function MyAppointmentsPage() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <div className="max-w-2xl mx-auto px-6 pt-6">
           <BackToHome />
         </div>
@@ -116,7 +116,7 @@ export default function MyAppointmentsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen flex flex-col items-center justify-center px-6">
         <p className="text-red-500 mb-4">{error}</p>
         <BackToHome />
       </div>
@@ -124,7 +124,7 @@ export default function MyAppointmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="max-w-3xl mx-auto px-6 pt-6">
         <BackToHome />
       </div>

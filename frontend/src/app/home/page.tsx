@@ -158,14 +158,14 @@ export default function HomePage() {
 
   if (!authChecked) {
     return (
-      <div className="home-bg min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader />
       </div>
     );
   }
 
   return (
-    <div className="home-bg min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       <div className="home-blob absolute -top-24 -right-24 w-80 h-80 bg-peach opacity-20" />
       <div
         className="home-blob absolute top-[40%] -left-32 w-64 h-64 bg-brand-orange opacity-[0.07]"

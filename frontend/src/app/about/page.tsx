@@ -249,7 +249,7 @@ const AboutPageRoute = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <section className="max-w-6xl mx-auto px-6 pt-8 pb-3 card-animate-in">
         <BackToHome label="Member Portal" />
         <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-[1fr_280px] md:items-start">

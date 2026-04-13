@@ -5,6 +5,8 @@
   --foreground: #ffffff;
   --brand-blue: #1a3f69;
   --brand-orange: #e9a059;
+  --brand-orange-hover: #c97f42;
+  --brand-orange-active: #b8743a;
   --secondary-blue: #536c89;
   --peach: #f5d8bb;
   --card-border: #d8d8d8;
@@ -44,12 +46,32 @@
   color: var(--brand-orange);
 }
 
+/* Darker orange for small/UI text on white (closer to WCAG AA vs. decorative --brand-orange) */
+.text-brand-orange-strong {
+  color: #b86d2e;
+}
+
 .bg-brand-blue {
   background-color: var(--brand-blue);
 }
 
 .bg-brand-orange {
   background-color: var(--brand-orange);
+}
+
+/* Expert “Book” CTA: hover/active in plain CSS so it isn’t overridden by .bg-brand-orange order/specificity */
+.expert-book-cta {
+  background-color: var(--brand-orange);
+  color: #fff;
+  transition: background-color 0.2s ease-out;
+}
+
+.expert-book-cta:hover {
+  background-color: var(--brand-orange-hover);
+}
+
+.expert-book-cta:active {
+  background-color: var(--brand-orange-active);
 }
 
 .border-brand-blue {
@@ -101,10 +123,17 @@
   }
 }
 
-body {
+/* Warm page canvas (same as .home-bg / hub) */
+body,
+.home-bg {
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(245, 216, 187, 0.13) 0%, transparent 55%),
-    var(--light-bg);
+    radial-gradient(ellipse at 20% 10%, rgba(245, 216, 187, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 60%, rgba(83, 108, 137, 0.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 100%, rgba(245, 216, 187, 0.15) 0%, transparent 50%),
+    #faf8f5;
+}
+
+body {
   color: var(--foreground);
   font-family: var(--font-plex), system-ui, sans-serif;
 }
@@ -137,14 +166,7 @@ main {
   }
 }
 
-/* ── Homepage Warm Background ────────────────── */
-.home-bg {
-  background:
-    radial-gradient(ellipse at 20% 10%, rgba(245, 216, 187, 0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 60%, rgba(83, 108, 137, 0.06) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 100%, rgba(245, 216, 187, 0.15) 0%, transparent 50%),
-    #faf8f5;
-}
+/* .home-bg: background shared with body (see body,.home-bg above) */
 
 /* decorative floating blobs */
 .home-blob {

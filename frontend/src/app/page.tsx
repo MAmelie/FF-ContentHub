@@ -121,7 +121,7 @@ function HomeContent() {
 
 
   return (
-    <div className="home-bg min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {/* ─── Decorative Blobs ─────────────────────── */}
       <div className="home-blob absolute -top-24 -right-24 w-80 h-80 bg-peach opacity-20" />
       <div className="home-blob absolute top-[40%] -left-32 w-64 h-64 bg-brand-orange opacity-[0.07]" style={{ animationDelay: "-6s" }} />
@@ -187,7 +187,7 @@ function HomeContent() {
                       Content Hub
                     </h2>
                     <p className="text-xs sm:text-sm text-subtitle font-plex">
-                      Meeting readouts, podcasts and additional content to support your work.
+                      Meeting readouts, podcasts, and additional content to support your work.
                     </p>
                   </header>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
@@ -252,7 +252,7 @@ function HomeContent() {
 export default function Home() {
   return (
     <Suspense fallback={
-      <div className="home-bg min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader />
       </div>
     }>
