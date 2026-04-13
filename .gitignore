@@ -2,3 +2,14 @@
 DEPLOYMENT.md
 DNS-AND-DOMAIN-SETUP.md
 STRAPI-TILE-CATEGORY-PRODUCTION.md
+
+# Bulk import: keep sample JSON + pdfs folder placeholder; PDFs and full imports stay local
+backend/data/pdfs/*
+!backend/data/pdfs/.gitkeep
+backend/data/recommendations.json
+backend/data/recommendations-listen-fix.json
+backend/data/documents-import.json
+backend/data/documents-import-sample.json
+
+# Encrypted content exports (local backups)
+backend/**/*.enc
