@@ -178,7 +178,7 @@ export default function ExpertProfilePage({
     <div className="min-h-screen">
       <CalendlyBadge />
       <div className="max-w-4xl mx-auto px-6 pt-6">
-        <BackToHome label="Expert site" href="/expert-net" />
+        <BackToHome label="Expert Network" href="/expert-net" />
       </div>
 
       <article className="max-w-4xl mx-auto px-6 pb-16">
@@ -264,13 +264,6 @@ export default function ExpertProfilePage({
           )}
         </section>
         */}
-
-        <Link
-          href="/expert-net"
-          className="inline-flex items-center gap-2 text-brand-blue hover:text-brand-orange mt-8 transition-colors font-plex text-sm font-medium"
-        >
-          <FaArrowLeft size={12} /> Back to Expert Network
-        </Link>
       </article>
 
     </div>

@@ -22,7 +22,7 @@ const EXPERT_NET_FAQ: { category: string; q: string; a: string }[] = [
   { category: "Planning & Logistics", q: "How long is the typical session?", a: "60 minutes." },
   { category: "Planning & Logistics", q: "What formats are available?", a: "Fireside chats, informal conversations, or mini research talks followed by Q&A. For something outside the usual formats, contact Maddie." },
   { category: "Planning & Logistics", q: "Are sessions in-person or virtual?", a: "Virtual only." },
-  { category: "Planning & Logistics", q: "How do I book an expert session?", a: "Start with the Book an Expert Session button on this page—it opens our scheduling flow so you can pick a time. For credits, billing, non-standard formats, or if you want us to help match you to an expert, contact Maddie or Gina." },
+  { category: "Planning & Logistics", q: "How do I book an expert session?", a: "Start with the Book an Expert Session button on this page. It opens our scheduling flow so you can pick a time. For credits, billing, non-standard formats, or if you want us to help match you to an expert, contact Maddie or Gina." },
   { category: "Planning & Logistics", q: "What preparation is required?", a: "Complete the steps in the scheduling flow and any intake or context questions you're asked before the session. If prep isn't completed, we may need to reschedule. If you're unsure what's required, ask Maddie or Gina." },
   { category: "Planning & Logistics", q: "Can I do a prep call with the expert?", a: "Experts don't do prep calls. (Do you really want another meeting?!). Instead, use the scheduling and intake steps to share context. If a prep call is essential, contact Maddie." },
   { category: "Planning & Logistics", q: "Can I record the session?", a: "Not usually. In limited cases, we may allow recording for internal use. Ask Maddie in advance." },
@@ -75,6 +75,9 @@ const ExpertNetPage = () => {
   const [openFaqCategories, setOpenFaqCategories] = useState<Set<string>>(
     () => new Set()
   );
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  /** Distance from viewport bottom (px); lifts the FAB above `#site-footer` when it’s in view. */
+  const [scrollTopFabBottomPx, setScrollTopFabBottomPx] = useState(24);
 
   const faqByCategory = useMemo(
     () => groupFaqByCategory(EXPERT_NET_FAQ),
@@ -114,6 +117,49 @@ const ExpertNetPage = () => {
     fetchExpertNet();
   }, []);
 
+  useEffect(() => {
+    if (loading || error || !expertNet) {
+      setShowScrollTop(false);
+      return;
+    }
+    const BOTTOM_THRESHOLD_PX = 200;
+    const GAP_ABOVE_FOOTER_PX = 16;
+
+    const update = () => {
+      const root = document.documentElement;
+      const maxScroll = root.scrollHeight - window.innerHeight;
+      const defaultBottom = window.innerWidth >= 768 ? 32 : 24;
+
+      if (maxScroll <= 0) {
+        setShowScrollTop(false);
+      } else {
+        setShowScrollTop(window.scrollY >= maxScroll - BOTTOM_THRESHOLD_PX);
+      }
+
+      const footer = document.getElementById("site-footer");
+      const h = window.innerHeight;
+      // Continuous in footerTop: avoids a jump when the footer crosses into the viewport
+      // (previously we only lifted when footerTop < h, so the FAB sat on the footer until then).
+      const bottom =
+        footer != null
+          ? Math.max(defaultBottom, h - footer.getBoundingClientRect().top + GAP_ABOVE_FOOTER_PX)
+          : defaultBottom;
+      setScrollTopFabBottomPx(bottom);
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [loading, error, expertNet]);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   /** Strip markdown to plain text for preview excerpts */
   const plainText = (md: string) =>
     md
@@ -148,6 +194,17 @@ const ExpertNetPage = () => {
 
   return (
     <>
+      {showScrollTop ? (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          style={{ bottom: scrollTopFabBottomPx }}
+          className="fixed right-6 z-50 flex size-11 items-center justify-center rounded-full border border-card bg-white text-brand-orange shadow-md transition-colors hover:bg-gray-50 hover:text-brand-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/50 focus-visible:ring-offset-2 md:right-8"
+          aria-label="Back to top"
+        >
+          <FaChevronUp className="size-4" aria-hidden />
+        </button>
+      ) : null}
       <div className="min-h-screen">
         {/* ─── Header (main-page style: title + elegant orange line) ─── */}
         <section className="max-w-6xl mx-auto px-6 pt-8 pb-2 card-animate-in">
@@ -346,14 +403,6 @@ const ExpertNetPage = () => {
             })}
           </div>
         </section>
-
-        {/* Footer metadata */}
-        <div className="max-w-6xl mx-auto px-6 pb-12">
-          <div className="border-t border-gray-200 pt-6 text-sm text-subtitle font-plex">
-            Last Updated:{" "}
-            {new Date(expertNet.updatedAt).toLocaleDateString()}
-          </div>
-        </div>
       </div>
     </>
   );
