@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #ffffff;
+  /* Navbar + footer bookend (matches Figma primary blue family) */
+  --nav-footer-gradient: linear-gradient(
+    135deg,
+    #1a3f69 0%,
+    #2a5a8f 50%,
+    #1a3f69 100%
+  );
   --brand-blue: #1a3f69;
   --brand-orange: #e9a059;
   --brand-orange-hover: #c97f42;
