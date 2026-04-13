@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import { FaSignOutAlt, FaChevronDown, FaBars, FaTimes } from "react-icons/fa";
+import { FaSignOutAlt, FaChevronDown, FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import { usePathname } from "next/navigation";
 import { getLogo, getAllTiles, getExpertNet } from "../../lib/api";
 import { Logo, Tile, ExpertBio } from "../../lib/types";
@@ -20,6 +20,17 @@ function expertSlug(bio: ExpertBio): string {
   return (bio.slug?.trim()) ? bio.slug.trim() : slugFromName(bio.name);
 }
 
+function getInitials(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+  if (parts.length === 1 && parts[0].length > 0) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return "?";
+}
+
 /** Fallback when Strapi logo is unavailable. Use public/logo.png. */
 const FALLBACK_LOGO = "/logo.png";
 const CONTENT_TILE_ORDER = ["Meeting readouts", "Podcasts", "Additional content"];
@@ -35,6 +46,7 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileContentOpen, setMobileContentOpen] = useState(false);
   const [mobileExpertOpen, setMobileExpertOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [expertBios, setExpertBios] = useState<ExpertBio[]>([]);
   const pathname = usePathname();
@@ -102,6 +114,7 @@ const Navbar = () => {
         setContentHubOpen(false);
         setExpertNetOpen(false);
         setMobileMenuOpen(false);
+        setUserMenuOpen(false);
       }
     };
     const handleEscape = (e: KeyboardEvent) => {
@@ -109,6 +122,7 @@ const Navbar = () => {
         setContentHubOpen(false);
         setExpertNetOpen(false);
         setMobileMenuOpen(false);
+        setUserMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -127,12 +141,14 @@ const Navbar = () => {
   const isForYouActive = pathname === "/home";
   const isExpertNetActive = pathname === "/expert-net" || pathname.startsWith("/expert-net/");
   const isAboutActive = pathname === "/about";
+  const userDisplayName = user ? getDisplayName(user) : "";
+  const userInitials = userDisplayName ? getInitials(userDisplayName) : "";
 
   return (
     <div
       ref={navRef}
       className="w-full sticky top-0 py-4 md:py-7 lg:py-9 z-50"
-      style={{ background: "linear-gradient(135deg, #1a3f69 0%, #2a5a8f 50%, #1a3f69 100%)" }}
+      style={{ background: "var(--nav-footer-gradient)" }}
     >
       <nav className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-2 md:hidden">
@@ -156,14 +172,40 @@ const Navbar = () => {
           </Link>
           <div className="flex items-center gap-2 shrink-0">
             {authenticated && user ? (
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center gap-1 bg-brand-orange hover:bg-amber-500 text-white px-2.5 py-2 rounded-lg text-xs font-medium transition-colors duration-200"
-                title="Logout"
-              >
-                <FaSignOutAlt size={11} />
-                Logout
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="true"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white hover:bg-white/20 transition-colors"
+                  title="Account"
+                >
+                  {userInitials ? (
+                    <span className="text-xs font-semibold font-plex">{userInitials}</span>
+                  ) : (
+                    <FaUserCircle className="h-5 w-5" aria-hidden />
+                  )}
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full z-[70] mt-2 min-w-[200px] rounded-lg border border-gray-100 bg-white py-2 shadow-xl">
+                    <p className="border-b border-gray-100 px-4 py-2 text-sm font-medium text-brand-blue font-plex">
+                      Hi, {userDisplayName}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                    >
+                      <FaSignOutAlt size={13} className="shrink-0" aria-hidden />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 type="button"
@@ -175,7 +217,10 @@ const Navbar = () => {
             )}
             <button
               type="button"
-              onClick={() => setMobileMenuOpen((v) => !v)}
+              onClick={() => {
+                setUserMenuOpen(false);
+                setMobileMenuOpen((v) => !v);
+              }}
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
               className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors"
@@ -187,11 +232,6 @@ const Navbar = () => {
 
         {mobileMenuOpen && (
           <div className="md:hidden mt-3 rounded-xl bg-white/95 backdrop-blur border border-white/30 shadow-lg p-3 space-y-2">
-            {authenticated && user && (
-              <p className="px-2 pb-1 text-sm text-brand-blue font-medium font-plex">
-                Hi, {getDisplayName(user)}
-              </p>
-            )}
             <Link
               href="/home"
               className={`block rounded-md px-3 py-2 text-sm font-plex ${
@@ -213,7 +253,7 @@ const Navbar = () => {
               onClick={() => setMobileContentOpen((v) => !v)}
               className="w-full inline-flex items-center justify-between rounded-md px-3 py-2 text-sm text-brand-blue hover:bg-peach/30 font-plex"
             >
-              Content and Tools Hub
+              Content and Tools
               <FaChevronDown className={`w-3 h-3 transition-transform ${mobileContentOpen ? "rotate-180" : ""}`} />
             </button>
             {mobileContentOpen && (
@@ -315,6 +355,7 @@ const Navbar = () => {
           <div className="flex items-center gap-3 lg:gap-4">
             <Link
               href="/home"
+              onClick={() => setUserMenuOpen(false)}
               className={`relative inline-flex items-center text-sm lg:text-base font-plex transition-colors duration-200 pb-0.5 ${
                 isForYouActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
               }`}
@@ -328,6 +369,7 @@ const Navbar = () => {
               href="https://onboarding.feedforward.ai/"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => setUserMenuOpen(false)}
               className="relative inline-flex items-center text-sm lg:text-base font-plex text-white hover:text-brand-orange transition-colors duration-200 pb-0.5"
             >
               Onboarding
@@ -339,6 +381,7 @@ const Navbar = () => {
                 onClick={() => {
                   setContentHubOpen((v) => !v);
                   setExpertNetOpen(false);
+                  setUserMenuOpen(false);
                 }}
                 aria-expanded={contentHubOpen}
                 aria-haspopup="true"
@@ -346,7 +389,7 @@ const Navbar = () => {
                   isContentHubActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
                 }`}
               >
-                Content and Tools Hub
+                Content and Tools
                 <FaChevronDown className={`w-4 h-4 transition-transform ${contentHubOpen ? "rotate-180" : ""}`} />
                 {isContentHubActive && (
                   <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
@@ -431,6 +474,7 @@ const Navbar = () => {
                 onClick={() => {
                   setExpertNetOpen((v) => !v);
                   setContentHubOpen(false);
+                  setUserMenuOpen(false);
                 }}
                 aria-expanded={expertNetOpen}
                 aria-haspopup="true"
@@ -479,6 +523,7 @@ const Navbar = () => {
               onClick={() => {
                 setContentHubOpen(false);
                 setExpertNetOpen(false);
+                setUserMenuOpen(false);
               }}
               className={`relative inline-flex items-center text-sm lg:text-base font-plex transition-colors duration-200 pb-0.5 ${
                 isAboutActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
@@ -491,19 +536,44 @@ const Navbar = () => {
             </Link>
 
             {authenticated && user ? (
-              <>
-                <span className="text-white/70 text-lg font-plex">
-                  Hi, {getDisplayName(user)}
-                </span>
+              <div className="relative">
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-1.5 bg-brand-orange hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200"
-                  title="Logout"
+                  type="button"
+                  onClick={() => {
+                    setUserMenuOpen((v) => !v);
+                    setContentHubOpen(false);
+                    setExpertNetOpen(false);
+                  }}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="true"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white hover:bg-white/20 transition-colors"
+                  title="Account"
                 >
-                  <FaSignOutAlt size={13} />
-                  Logout
+                  {userInitials ? (
+                    <span className="text-xs font-semibold font-plex">{userInitials}</span>
+                  ) : (
+                    <FaUserCircle className="h-5 w-5" aria-hidden />
+                  )}
                 </button>
-              </>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full z-[70] mt-2 min-w-[220px] rounded-lg border border-gray-100 bg-white py-2 shadow-xl">
+                    <p className="border-b border-gray-100 px-4 py-2 text-sm font-medium text-brand-blue font-plex">
+                      Hi, {userDisplayName}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-brand-blue hover:bg-peach/30 font-plex"
+                    >
+                      <FaSignOutAlt size={13} className="shrink-0" aria-hidden />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 type="button"
