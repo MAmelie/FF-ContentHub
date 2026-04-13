@@ -1,6 +1,6 @@
 // app/expert-net/page.tsx
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { getExpertNet } from "../../../lib/api";
 import { ExpertNet, ExpertBio } from "../../../lib/types";
@@ -8,31 +8,61 @@ import { slugFromName } from "../../../lib/expertAdvisoryTopics";
 import Loader from "../../components/Loader";
 import BackToHome from "../../components/BackToHome";
 import ExpertMatchChat from "../../components/ExpertMatchChat";
-import { FaUser, FaArrowRight, FaCalendarCheck, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { EXPERT_SESSION_CALENDLY_URL } from "@/lib/expertSessionCalendly";
+import { FaUser, FaArrowRight, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 const EXPERT_NET_FAQ: { category: string; q: string; a: string }[] = [
   // Participation & Attendance
   { category: "Participation & Attendance", q: "What counts as an expert session?", a: "Expert sessions are company-specific advisory and consultation sessions, not speaking engagements. Many experts in our network also do speaking engagements at different rates. If you're interested in a speaking engagement, Feedforward can facilitate." },
-  { category: "Participation & Attendance", q: "Who can we invite to expert sessions?", a: "Anyone from your organization can attend, including non-members and cross-functional partners. If you want colleagues to book their own sessions using your credits, contact Maddie." },
+  { category: "Participation & Attendance", q: "Who can we invite to expert sessions?", a: "Anyone from your organization can attend, including non-members and cross-functional partners. Use the Book an Expert Session button on this page to choose a time. If you want colleagues to book their own sessions using your credits or need help with roster logistics, contact Maddie." },
   { category: "Participation & Attendance", q: "Can we use expert sessions for talks with clients or customers?", a: "No, expert sessions are for internal use only." },
   { category: "Participation & Attendance", q: "How many people can attend?", a: "There's no hard limit, but please be reasonable. Keep it under 20 people for a real conversation." },
   { category: "Participation & Attendance", q: "Can multiple experts join one session?", a: "Yes, but each expert costs the same number of credits." },
   // Planning & Logistics
   { category: "Planning & Logistics", q: "How long is the typical session?", a: "60 minutes." },
-  { category: "Planning & Logistics", q: "What formats are available?", a: "Fireside chats, informal conversations, or mini research talks followed by Q&A. Contact Maddie if you have something specific in mind." },
+  { category: "Planning & Logistics", q: "What formats are available?", a: "Fireside chats, informal conversations, or mini research talks followed by Q&A. For something outside the usual formats, contact Maddie." },
   { category: "Planning & Logistics", q: "Are sessions in-person or virtual?", a: "Virtual only." },
-  { category: "Planning & Logistics", q: "How do I book an expert session?", a: "Contact Maddie or Gina to book." },
-  { category: "Planning & Logistics", q: "What preparation is required?", a: "You must complete the intake form before your session. If the form isn't completed, your session will be rescheduled." },
-  { category: "Planning & Logistics", q: "Can I do a prep call with the expert?", a: "Experts don't do prep calls. (Do you really want another meeting?!). Instead, we ask members to complete an intake form to provide context. If a prep call is essential, contact Maddie." },
+  { category: "Planning & Logistics", q: "How do I book an expert session?", a: "Start with the Book an Expert Session button on this page—it opens our scheduling flow so you can pick a time. For credits, billing, non-standard formats, or if you want us to help match you to an expert, contact Maddie or Gina." },
+  { category: "Planning & Logistics", q: "What preparation is required?", a: "Complete the steps in the scheduling flow and any intake or context questions you're asked before the session. If prep isn't completed, we may need to reschedule. If you're unsure what's required, ask Maddie or Gina." },
+  { category: "Planning & Logistics", q: "Can I do a prep call with the expert?", a: "Experts don't do prep calls. (Do you really want another meeting?!). Instead, use the scheduling and intake steps to share context. If a prep call is essential, contact Maddie." },
   { category: "Planning & Logistics", q: "Can I record the session?", a: "Not usually. In limited cases, we may allow recording for internal use. Ask Maddie in advance." },
   { category: "Planning & Logistics", q: "Can experts sign an NDA before our session?", a: "Yes. Your Feedforward agreement covers confidentiality, but experts can sign additional NDAs upon request. Please coordinate through Maddie." },
-  { category: "Planning & Logistics", q: "What if I need to cancel or reschedule?", a: "Please notify Maddie and the expert as soon as possible. If an expert needs to reschedule due to unforeseen circumstances, we'll let you know." },
+  { category: "Planning & Logistics", q: "What if I need to cancel or reschedule?", a: "Use the confirmation and links from your scheduling email when possible, and notify Maddie and the expert as soon as you can. If an expert needs to reschedule due to unforeseen circumstances, we'll let you know." },
   { category: "Planning & Logistics", q: "What video platform can we use (Zoom, Teams, etc.)?", a: "Your choice—Zoom, Teams, whatever you use. We default to Zoom unless you tell us otherwise." },
   // Content & Follow-up
   { category: "Content & Follow-up", q: "Can I hire an expert for an extended consulting engagement with my company?", a: "Yes, we'll connect you." },
   { category: "Content & Follow-up", q: "Can I ask follow-up questions after the session?", a: "Yes! Our experts are very active on Discord. That's the place to ask follow-up questions. Many members also book additional sessions with the same expert." },
   { category: "Content & Follow-up", q: "Will I receive any materials after the session?", a: "Sessions are conversations, not presentations, so there are no handouts. We recommend taking notes, and experts are reachable on Discord for follow-ups." },
 ];
+
+type FaqItem = { q: string; a: string };
+
+function groupFaqByCategory(
+  items: { category: string; q: string; a: string }[]
+): { category: string; items: FaqItem[] }[] {
+  const map = new Map<string, FaqItem[]>();
+  const order: string[] = [];
+  for (const row of items) {
+    if (!map.has(row.category)) {
+      order.push(row.category);
+      map.set(row.category, []);
+    }
+    map.get(row.category)!.push({ q: row.q, a: row.a });
+  }
+  return order.map((category) => ({
+    category,
+    items: map.get(category)!,
+  }));
+}
+
+/** Stable id fragment for FAQ category (no spaces/special chars in HTML ids). */
+function faqCategoryBaseId(category: string): string {
+  return `faq-cat-${category
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`;
+}
 
 function expertSlug(bio: ExpertBio): string {
   return (bio.slug && bio.slug.trim()) ? bio.slug.trim() : slugFromName(bio.name);
@@ -42,10 +72,22 @@ const ExpertNetPage = () => {
   const [expertNet, setExpertNet] = useState<ExpertNet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedFaqId, setExpandedFaqId] = useState<number | null>(null);
+  const [openFaqCategories, setOpenFaqCategories] = useState<Set<string>>(
+    () => new Set()
+  );
 
-  const toggleFaq = useCallback((id: number) => {
-    setExpandedFaqId((prev) => (prev === id ? null : id));
+  const faqByCategory = useMemo(
+    () => groupFaqByCategory(EXPERT_NET_FAQ),
+    []
+  );
+
+  const toggleFaqCategory = useCallback((category: string) => {
+    setOpenFaqCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
+      return next;
+    });
   }, []);
 
   const scrollToFaq = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -106,51 +148,39 @@ const ExpertNetPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         {/* ─── Header (main-page style: title + elegant orange line) ─── */}
         <section className="max-w-6xl mx-auto px-6 pt-8 pb-2 card-animate-in">
           <BackToHome label="Member Portal" />
-          <div className="mt-4">
+          <div className="mt-4 rounded-2xl border border-card bg-white p-6 shadow-sm md:p-8">
             <h1 className="text-2xl md:text-3xl font-semibold text-brand-blue font-didot">
               Founding Team & Expert Advisory Network
             </h1>
-            <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-base text-subtitle font-plex w-full">
-                  Expert sessions are company-specific advisory and consultation sessions, not speaking engagements.
-                  <br />
-                  Many experts in our network also do speaking engagements at different rates. 
-                  <br />
-                  If you're interested in a speaking engagement, Feedforward can facilitate.
-                </p>
-                <p className="text-base text-subtitle font-plex mt-2 mb-6">
-                  If you have any questions, please email{" "}
-                  <a
-                    href="mailto:maddie@feedforward.ai"
-                    className="text-subtitle hover:underline underline-offset-2"
-                  >
-                    maddie@feedforward.ai
-                  </a>
-                  .
-                </p>
-              </div>
-              <a
-                href="#faq"
-                onClick={scrollToFaq}
-                className="inline-flex items-center gap-2 shrink-0 px-3.5 py-2.5 text-sm font-medium text-brand-blue border border-brand-blue rounded-lg hover:bg-brand-blue hover:text-white transition-colors font-plex text-center"
-              >
-                <FaChevronDown size={12} className="shrink-0" />
-                Click here for FAQs and more info
-              </a>
+            <div className="mt-3 max-w-none space-y-2 text-base leading-relaxed text-subtitle font-plex [text-wrap:pretty]">
+              <p>
+                Expert sessions are company-specific advisory and consultation sessions, not speaking engagements. Many experts in our network also do speaking engagements at different rates.
+              </p>
+              <p>
+                If you&apos;re interested in a speaking engagement, Feedforward can facilitate.
+              </p>
             </div>
+            <ExpertMatchChat
+              experts={bios}
+              getExpertSlug={expertSlug}
+              bookSessionHref={EXPERT_SESSION_CALENDLY_URL}
+              embedInCard
+            />
           </div>
-          <div className="gradient-divider mb-14" />
+          <a
+            href="#faq"
+            onClick={scrollToFaq}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-secondary font-plex underline-offset-4 transition-colors hover:text-brand-blue hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
+          >
+            <FaChevronDown size={10} className="shrink-0 opacity-80" aria-hidden />
+            FAQs &amp; details
+          </a>
+          <div className="mt-6 mb-8 gradient-divider" />
         </section>
-
-        {/* ─── AI match chat: "Not sure who to book?" ─────────── */}
-        {bios.length > 0 && (
-          <ExpertMatchChat experts={bios} getExpertSlug={expertSlug} />
-        )}
 
         {/* ─── Card Grid ────────────────────────────────────── */}
         {bios.length > 0 && (
@@ -239,6 +269,7 @@ const ExpertNetPage = () => {
                       </div>
                     </div>
 
+                    {/*
                     <Link
                       href={`/expert-net/${slug}#book-session`}
                       className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-lg bg-brand-orange px-2 py-1.5 text-[10px] font-semibold text-white font-plex hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2"
@@ -246,6 +277,7 @@ const ExpertNetPage = () => {
                     >
                       <FaCalendarCheck size={10} /> Book session
                     </Link>
+                    */}
                   </div>
                 );
               })}
@@ -258,48 +290,60 @@ const ExpertNetPage = () => {
           <h2 id="faq-heading" className="text-xl md:text-2xl font-semibold text-brand-blue font-didot mb-6">
             Frequently asked questions
           </h2>
-          <div className="space-y-6">
-            {(() => {
-              let lastCategory = "";
-              let faqIndex = 0;
-              return EXPERT_NET_FAQ.map((item) => {
-                const showCategory = item.category !== lastCategory;
-                if (showCategory) lastCategory = item.category;
-                const id = faqIndex++;
-                const expanded = expandedFaqId === id;
-                return (
-                  <div key={id}>
-                    {showCategory && (
-                      <h3 className="text-sm font-semibold text-subtitle font-plex uppercase tracking-wide mb-3 first:mt-0 mt-6">
-                        {item.category}
-                      </h3>
-                    )}
-                    <div className="rounded-xl bg-white border border-card shadow-sm overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => toggleFaq(id)}
-                        className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50/80 transition-colors"
-                        aria-expanded={expanded}
-                      >
-                        <span className="flex-1 text-base font-medium text-brand-blue font-plex">
-                          {item.q}
-                        </span>
-                        <span className="text-subtitle shrink-0">
-                          {expanded ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
-                        </span>
-                      </button>
-                      {expanded && (
-                        <div className="border-t border-card px-5 py-4 bg-gray-50/50">
-                          <p className="text-sm text-subtitle font-plex leading-relaxed">
-                            {item.a}
-                          </p>
-                        </div>
+          <div className="space-y-4">
+            {faqByCategory.map(({ category, items }) => {
+              const baseId = faqCategoryBaseId(category);
+              const headingId = `${baseId}-heading`;
+              const panelId = `${baseId}-panel`;
+              const expanded = openFaqCategories.has(category);
+              return (
+                <div
+                  key={category}
+                  className="rounded-xl border border-card bg-white shadow-sm overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    id={headingId}
+                    onClick={() => toggleFaqCategory(category)}
+                    className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-gray-50/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-inset"
+                    aria-expanded={expanded}
+                    aria-controls={panelId}
+                  >
+                    <span className="flex-1 text-base font-semibold text-brand-blue font-plex">
+                      {category}
+                    </span>
+                    <span className="shrink-0 text-subtitle" aria-hidden>
+                      {expanded ? (
+                        <FaChevronUp size={14} />
+                      ) : (
+                        <FaChevronDown size={14} />
                       )}
+                    </span>
+                  </button>
+                  {expanded ? (
+                    <div
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={headingId}
+                      className="border-t border-card bg-gray-50/50 px-5 py-5"
+                    >
+                      <div className="space-y-5">
+                        {items.map((item, idx) => (
+                          <div key={`${category}-${idx}`}>
+                            <h3 className="text-sm font-medium text-brand-blue font-plex leading-snug">
+                              {item.q}
+                            </h3>
+                            <p className="mt-2 text-sm leading-relaxed text-subtitle font-plex">
+                              {item.a}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              });
-            })()}
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         </section>
 

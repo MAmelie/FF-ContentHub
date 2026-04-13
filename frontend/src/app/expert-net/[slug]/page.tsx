@@ -11,9 +11,10 @@ import {
 } from "../../../../lib/expertAdvisoryTopics";
 import Loader from "@/components/Loader";
 import BackToHome from "@/components/BackToHome";
+import CalendlyBadge from "@/components/CalendlyBadge";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { FaUser, FaArrowLeft, FaCalendarCheck } from "react-icons/fa";
+import { FaUser, FaArrowLeft } from "react-icons/fa";
 
 const markdownComponents = {
   h1: ({ children }: { children?: React.ReactNode }) => (
@@ -155,7 +156,7 @@ export default function ExpertProfilePage({
     );
   if (!expert)
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen flex flex-col items-center justify-center px-6">
         <p className="text-gray-600 mb-4">Expert not found.</p>
         <Link
           href="/expert-net"
@@ -174,7 +175,8 @@ export default function ExpertProfilePage({
     (expert.advisory_topics?.trim() ?? "") !== "" || (advisoryTopics?.length ?? 0) > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
+      <CalendlyBadge />
       <div className="max-w-4xl mx-auto px-6 pt-6">
         <BackToHome label="Expert site" href="/expert-net" />
       </div>
@@ -208,13 +210,6 @@ export default function ExpertProfilePage({
                     {expert.title}
                   </p>
                 </div>
-                {/* TODO: point to Calendly when ready */}
-                <button
-                  type="button"
-                  className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-medium text-white font-plex hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2"
-                >
-                  <FaCalendarCheck size={14} /> Book session
-                </button>
               </div>
               <div className="mt-3 h-px w-12 bg-brand-orange/40" />
 

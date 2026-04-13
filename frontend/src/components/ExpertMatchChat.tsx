@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ExpertBio } from "@/../lib/types";
 import { expertAdvisoryTopicsByName } from "@/../lib/expertAdvisoryTopics";
-import { FaCommentDots, FaChevronDown, FaChevronUp, FaPaperPlane, FaUser } from "react-icons/fa";
+import { FaCommentDots, FaChevronDown, FaChevronUp, FaPaperPlane, FaUser, FaCalendarCheck } from "react-icons/fa";
 
 function stripMarkdown(text: string): string {
   return text
@@ -79,9 +79,18 @@ const INTRO_MESSAGE =
 interface ExpertMatchChatProps {
   experts: ExpertBio[];
   getExpertSlug: (bio: ExpertBio) => string;
+  /** When set, shows “Book an expert session” beside the match helper (e.g. Calendly URL). */
+  bookSessionHref?: string;
+  /** Omit outer section spacing when rendered inside a parent card (e.g. expert-net hero). */
+  embedInCard?: boolean;
 }
 
-export default function ExpertMatchChat({ experts, getExpertSlug }: ExpertMatchChatProps) {
+export default function ExpertMatchChat({
+  experts,
+  getExpertSlug,
+  bookSessionHref,
+  embedInCard = false,
+}: ExpertMatchChatProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: INTRO_MESSAGE }]);
   const [input, setInput] = useState("");
@@ -119,29 +128,85 @@ export default function ExpertMatchChat({ experts, getExpertSlug }: ExpertMatchC
     }, 600);
   };
 
-  return (
-    <section className="max-w-6xl mx-auto px-6 mb-12">
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+  const outerClass = embedInCard
+    ? "mt-4 space-y-2"
+    : "max-w-6xl mx-auto px-6 mb-12 space-y-3";
+
+  if (experts.length === 0) {
+    const emptyInner = bookSessionHref ? (
+      <div className="flex max-w-xl flex-col gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-subtitle font-plex">
+          Get started
+        </p>
+        <a
+          href={bookSessionHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="expert-book-cta inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3.5 py-2 text-center text-sm font-medium font-plex tracking-tight focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-1 sm:w-auto sm:self-start"
+        >
+          <FaCalendarCheck size={12} className="shrink-0 opacity-95" />
+          Book an Expert Session
+        </a>
+        <p className="text-sm leading-relaxed text-subtitle font-plex">
+          Expert profiles aren&apos;t listed here right now. You can still book using the button above. For help choosing someone or special requests, contact Maddie or Gina, or scroll to the FAQ below.
+        </p>
+      </div>
+    ) : null;
+
+    if (embedInCard) {
+      return (
+        <div className={outerClass} aria-label="Book an expert session">
+          {emptyInner}
+        </div>
+      );
+    }
+    return (
+      <section className={outerClass} aria-label="Book an expert session">
+        {emptyInner}
+      </section>
+    );
+  }
+
+  const matchBody = (
+    <>
+      <p className="text-xs font-semibold uppercase tracking-wide text-subtitle font-plex">
+        Get started
+      </p>
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch sm:gap-3">
+        {bookSessionHref ? (
+          <a
+            href={bookSessionHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="expert-book-cta inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3.5 py-2 text-sm font-medium font-plex tracking-tight focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-1 text-center"
+          >
+            <FaCalendarCheck size={12} className="shrink-0 opacity-95" />
+            Book an Expert Session
+          </a>
+        ) : null}
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-gray-50/80 transition-colors"
+          className="group flex flex-1 min-w-0 items-center gap-2 rounded-md border border-card bg-white px-2 py-2 font-plex shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-1"
           aria-expanded={open}
         >
-          <span className="inline-flex items-center gap-3 text-brand-blue font-semibold font-didot">
-            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-brand-orange/15 text-brand-orange">
-              <FaCommentDots size={20} />
+          <span className="flex w-8 shrink-0 items-center justify-start">
+            <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange-strong">
+              <FaCommentDots size={16} />
             </span>
-            Not sure who to book?
           </span>
-          <span className="text-subtitle">
-            {open ? <FaChevronUp size={16} /> : <FaChevronDown size={16} />}
+          <span className="min-w-0 flex-1 text-center text-sm font-medium leading-snug text-brand-orange-strong group-hover:text-[#965a20]">
+            Want us to recommend an Expert Session?
+          </span>
+          <span className="flex w-8 shrink-0 items-center justify-end text-brand-orange-strong group-hover:text-[#965a20]">
+            {open ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
           </span>
         </button>
+      </div>
 
-        {open && (
-          <div className="border-t border-gray-200 bg-gray-50/50">
-            <div className="p-4 max-h-[420px] flex flex-col">
+      {open && (
+        <div className="mt-4 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="p-4 max-h-[420px] flex flex-col bg-gray-50/50">
               <div className="flex-1 overflow-y-auto space-y-4 min-h-[200px] pr-2">
                 {messages.map((msg, i) => (
                   <div
@@ -220,9 +285,13 @@ export default function ExpertMatchChat({ experts, getExpertSlug }: ExpertMatchC
                 </button>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </section>
+        </div>
+      )}
+    </>
   );
+
+  if (embedInCard) {
+    return <div className={outerClass}>{matchBody}</div>;
+  }
+  return <section className={outerClass}>{matchBody}</section>;
 }

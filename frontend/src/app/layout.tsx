@@ -27,6 +27,10 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=GFS+Didot&display=swap"
         />
+        <link
+          rel="stylesheet"
+          href="https://assets.calendly.com/assets/external/widget.css"
+        />
       </head>
       <body
         className={`${ibmPlexSans.variable} antialiased min-h-screen flex flex-col font-plex`}
