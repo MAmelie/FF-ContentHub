@@ -154,7 +154,7 @@ const ExpertNetPage = () => {
           <BackToHome label="Member Portal" />
           <div className="mt-4 rounded-2xl border border-card bg-white p-6 shadow-sm md:p-8">
             <h1 className="text-2xl md:text-3xl font-semibold text-brand-blue font-didot">
-              Founding Team & Expert Advisory Network
+              Expert Advisory Network
             </h1>
             <div className="mt-3 max-w-none space-y-2 text-base leading-relaxed text-subtitle font-plex [text-wrap:pretty]">
               <p>
