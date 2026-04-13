@@ -200,6 +200,14 @@ const Navbar = () => {
             >
               For You
             </Link>
+            <a
+              href="https://onboarding.feedforward.ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-md px-3 py-2 text-sm font-plex text-brand-blue hover:bg-peach/30"
+            >
+              Onboarding
+            </a>
             <button
               type="button"
               onClick={() => setMobileContentOpen((v) => !v)}
@@ -304,10 +312,10 @@ const Navbar = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4 lg:gap-5">
+          <div className="flex items-center gap-3 lg:gap-4">
             <Link
               href="/home"
-              className={`relative inline-flex items-center text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
+              className={`relative inline-flex items-center text-sm lg:text-base font-plex transition-colors duration-200 pb-0.5 ${
                 isForYouActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
               }`}
             >
@@ -316,6 +324,14 @@ const Navbar = () => {
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
               )}
             </Link>
+            <a
+              href="https://onboarding.feedforward.ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative inline-flex items-center text-sm lg:text-base font-plex text-white hover:text-brand-orange transition-colors duration-200 pb-0.5"
+            >
+              Onboarding
+            </a>
 
             <div className="relative">
               <button
@@ -326,7 +342,7 @@ const Navbar = () => {
                 }}
                 aria-expanded={contentHubOpen}
                 aria-haspopup="true"
-                className={`relative inline-flex items-center gap-1 text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
+                className={`relative inline-flex items-center gap-1 text-sm lg:text-base font-plex transition-colors duration-200 pb-0.5 ${
                   isContentHubActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
                 }`}
               >
@@ -418,7 +434,7 @@ const Navbar = () => {
                 }}
                 aria-expanded={expertNetOpen}
                 aria-haspopup="true"
-                className={`relative inline-flex items-center gap-1 text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
+                className={`relative inline-flex items-center gap-1 text-sm lg:text-base font-plex transition-colors duration-200 pb-0.5 ${
                   isExpertNetActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
                 }`}
               >
@@ -464,7 +480,7 @@ const Navbar = () => {
                 setContentHubOpen(false);
                 setExpertNetOpen(false);
               }}
-              className={`relative inline-flex items-center text-base lg:text-[17px] font-plex transition-colors duration-200 pb-0.5 ${
+              className={`relative inline-flex items-center text-sm lg:text-base font-plex transition-colors duration-200 pb-0.5 ${
                 isAboutActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
               }`}
             >

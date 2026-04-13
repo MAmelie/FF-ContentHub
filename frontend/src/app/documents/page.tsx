@@ -250,24 +250,24 @@ const DocumentsPage = () => {
                                 return (
                                   <li
                                     key={doc.id}
-                                    className="group flex min-w-0 flex-col sm:flex-row sm:items-start gap-y-1.5 sm:gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
+                                    className="group flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1.5 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                                   >
                                     {fileUrl ? (
                                       <a
                                         href={fileUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                                        className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
                                       >
                                         {doc.title} — {displayDate}
                                       </a>
                                     ) : (
-                                      <span className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
+                                      <span className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
                                         {doc.title} — {displayDate}
                                       </span>
                                     )}
                                     {fileUrl && (
-                                      <span className="flex shrink-0 items-center gap-2 sm:pt-0.5">
+                                      <span className="inline-flex items-center gap-2 sm:pt-0.5">
                                         <button
                                           type="button"
                                           onClick={() => downloadDocument(fileUrl, doc.title)}
@@ -296,24 +296,24 @@ const DocumentsPage = () => {
                             return (
                               <li
                                 key={doc.id}
-                                className="group flex min-w-0 flex-col sm:flex-row sm:items-start gap-y-1.5 sm:gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
+                                className="group flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1.5 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                               >
                                 {fileUrl ? (
                                   <a
                                     href={fileUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                                    className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
                                   >
                                     {doc.title} — {displayDate}
                                   </a>
                                 ) : (
-                                  <span className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
+                                  <span className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
                                     {doc.title} — {displayDate}
                                   </span>
                                 )}
                                 {fileUrl && (
-                                  <span className="flex shrink-0 items-center gap-2 sm:pt-0.5">
+                                  <span className="inline-flex items-center gap-2 sm:pt-0.5">
                                     <button
                                       type="button"
                                       onClick={() => downloadDocument(fileUrl, doc.title)}
@@ -341,24 +341,24 @@ const DocumentsPage = () => {
                         return (
                           <li
                             key={doc.id}
-                            className="group flex min-w-0 flex-col sm:flex-row sm:items-start gap-y-1.5 sm:gap-x-2 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
+                            className="group flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1.5 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                           >
                             {fileUrl ? (
                               <a
                                 href={fileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                                className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
                               >
                                 {doc.title} — {displayDate}
                               </a>
                             ) : (
-                              <span className="min-w-0 flex-1 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
+                              <span className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
                                 {doc.title} — {displayDate}
                               </span>
                             )}
                             {fileUrl && (
-                              <span className="flex shrink-0 items-center gap-2 sm:pt-0.5">
+                              <span className="inline-flex items-center gap-2 sm:pt-0.5">
                                 <button
                                   type="button"
                                   onClick={() => downloadDocument(fileUrl, doc.title)}
