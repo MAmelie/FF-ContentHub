@@ -1,10 +1,45 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { ExpertBio } from "@/../lib/types";
 import { expertAdvisoryTopicsByName } from "@/../lib/expertAdvisoryTopics";
-import { FaCommentDots, FaChevronDown, FaChevronUp, FaPaperPlane, FaUser, FaCalendarCheck } from "react-icons/fa";
+import { FaPaperPlane, FaUser, FaCalendarCheck } from "react-icons/fa";
+
+/** Common English stopwords + chat fillers so short queries keep signal. */
+const STOPWORDS = new Set(
+  [
+    "the", "and", "for", "are", "but", "not", "you", "all", "can", "her", "was", "one", "our", "out", "day", "get",
+    "has", "him", "his", "how", "its", "may", "new", "now", "old", "see", "two", "who", "boy", "did", "let", "put",
+    "say", "she", "too", "use", "any", "ask", "way", "why", "try", "lot", "own", "ive", "ill", "youre",
+    "im", "dont", "wont", "cant", "isnt", "arent", "doesnt", "didnt", "thats", "whats", "with", "from", "this",
+    "that", "have", "been", "were", "what", "when", "your", "will", "just", "like", "into", "than", "then", "them",
+    "some", "very", "also", "here", "come", "made", "make", "over", "such", "only", "about", "would", "could",
+    "should", "there", "their", "want", "need", "help", "tell", "give", "know", "think", "look", "find", "work",
+    "more", "much", "well", "back", "after", "first", "being", "other", "many", "most", "through", "where", "which",
+    "while", "these", "those", "doing", "going", "really", "thing", "things", "please", "thanks", "thank",
+  ].map((w) => w.toLowerCase())
+);
+
+const CHITCHAT = new Set([
+  "hi", "hello", "hey", "yo", "sup", "thanks", "thx", "ty", "cheers", "bye", "goodbye", "ok", "okay", "k", "yes",
+  "no", "yeah", "yep", "nah", "nope", "sure", "morning", "afternoon", "evening", "helloo", "hiya", "howdy",
+]);
+
+const CLARIFY_SUBSTANCE_MESSAGE =
+  "Happy to help. Could you share a bit more about what you're trying to do or decide? For example, your team's AI adoption goals, a technical area, or a leadership challenge. That way I can suggest the right expert.";
+
+const CLARIFY_LOW_CONFIDENCE_MESSAGE =
+  "I don't have a strong enough match from that alone. Adding a sentence on your context (industry, team size, or the specific problem) will help me point you to the best expert.";
+
+const WEIGHT_TOPIC = 2;
+const WEIGHT_TITLE = 1.5;
+const WEIGHT_BIO = 1;
+const WEIGHT_NAME_EXACT = 0.35;
+/** At least this best score (after weights) to show named recommendations. */
+const MIN_MATCH_SCORE = 1.0;
+const PARTIAL_MIN_LEN = 4;
+const PARTIAL_WEIGHT_RATIO = 0.45;
 
 function stripMarkdown(text: string): string {
   return text
@@ -19,25 +54,6 @@ function stripMarkdown(text: string): string {
     .toLowerCase();
 }
 
-function getSearchableTextForExpert(bio: ExpertBio): string {
-  const parts: string[] = [
-    bio.name.toLowerCase(),
-    bio.title.toLowerCase(),
-    stripMarkdown(bio.bio),
-  ];
-  if (bio.advisory_topics?.trim()) {
-    parts.push(stripMarkdown(bio.advisory_topics));
-  }
-  const fallback = expertAdvisoryTopicsByName[bio.name];
-  if (fallback) {
-    fallback.forEach((t) => {
-      parts.push(t.title.toLowerCase());
-      t.points.forEach((p) => parts.push(stripMarkdown(p)));
-    });
-  }
-  return parts.join(" ");
-}
-
 function tokenize(text: string): string[] {
   return text
     .toLowerCase()
@@ -46,29 +62,90 @@ function tokenize(text: string): string[] {
     .filter((w) => w.length > 2);
 }
 
-function recommendExperts(
-  experts: ExpertBio[],
-  userMessage: string,
-  maxResults: number = 3
-): ExpertBio[] {
-  const queryTokens = tokenize(userMessage);
-  if (queryTokens.length === 0) return experts.slice(0, maxResults);
+function queryTokensFromUserMessage(userMessage: string): string[] {
+  return tokenize(userMessage).filter((t) => !STOPWORDS.has(t));
+}
 
-  const scored = experts.map((expert) => {
-    const searchable = getSearchableTextForExpert(expert);
-    const searchTokens = new Set(tokenize(searchable));
-    let score = 0;
-    for (const t of queryTokens) {
-      if (searchTokens.has(t)) score += 1;
-      else if (Array.from(searchTokens).some((s) => s.includes(t) || t.includes(s))) score += 0.5;
+function isSubstantiveQuery(tokens: string[], rawTrimmed: string): boolean {
+  if (rawTrimmed.length < 8) return false;
+  if (tokens.length === 0) return false;
+  if (tokens.every((t) => CHITCHAT.has(t))) return false;
+  if (tokens.length === 1) {
+    const t = tokens[0];
+    if (CHITCHAT.has(t)) return false;
+    if (t.length < 5) return false;
+  }
+  return true;
+}
+
+function bestTokenWeightInSet(queryToken: string, corpusTokens: string[], weight: number): number {
+  if (corpusTokens.length === 0) return 0;
+  const set = new Set(corpusTokens);
+  if (set.has(queryToken)) return weight;
+  let best = 0;
+  const partialW = weight * PARTIAL_WEIGHT_RATIO;
+  for (const s of corpusTokens) {
+    if (queryToken.length < PARTIAL_MIN_LEN || s.length < PARTIAL_MIN_LEN) continue;
+    if (s.includes(queryToken) || queryToken.includes(s)) {
+      best = Math.max(best, partialW);
     }
-    return { expert, score };
-  });
+  }
+  return best;
+}
 
+function getExpertCorpusTokens(bio: ExpertBio): {
+  topicTokens: string[];
+  titleTokens: string[];
+  bioTokens: string[];
+  nameTokens: string[];
+} {
+  const titleTokens = tokenize(bio.title);
+  const bioTokens = tokenize(stripMarkdown(bio.bio));
+  const topicChunks: string[] = [];
+  if (bio.advisory_topics?.trim()) topicChunks.push(stripMarkdown(bio.advisory_topics));
+  const fallback = expertAdvisoryTopicsByName[bio.name];
+  if (fallback) {
+    fallback.forEach((t) => {
+      topicChunks.push(t.title);
+      t.points.forEach((p) => topicChunks.push(stripMarkdown(p)));
+    });
+  }
+  const topicTokens = tokenize(topicChunks.join(" "));
+  const nameTokens = tokenize(bio.name);
+  return { topicTokens, titleTokens, bioTokens, nameTokens };
+}
+
+function scoreExpertMatch(bio: ExpertBio, queryTokens: string[]): number {
+  const { topicTokens, titleTokens, bioTokens, nameTokens } = getExpertCorpusTokens(bio);
+  let score = 0;
+  for (const q of queryTokens) {
+    const fromTopics = bestTokenWeightInSet(q, topicTokens, WEIGHT_TOPIC);
+    const fromTitle = bestTokenWeightInSet(q, titleTokens, WEIGHT_TITLE);
+    const fromBio = bestTokenWeightInSet(q, bioTokens, WEIGHT_BIO);
+    score += Math.max(fromTopics, fromTitle, fromBio);
+    if (nameTokens.includes(q)) score += WEIGHT_NAME_EXACT;
+  }
+  return score;
+}
+
+type MatchResult = { experts: ExpertBio[]; bestScore: number };
+
+function matchExperts(experts: ExpertBio[], queryTokens: string[], maxResults: number = 3): MatchResult {
+  if (queryTokens.length === 0) return { experts: [], bestScore: 0 };
+
+  const scored = experts.map((expert) => ({
+    expert,
+    score: scoreExpertMatch(expert, queryTokens),
+  }));
   scored.sort((a, b) => b.score - a.score);
-  const top = scored.filter((x) => x.score > 0);
-  if (top.length === 0) return experts.slice(0, maxResults);
-  return top.slice(0, maxResults).map((x) => x.expert);
+  const bestScore = scored[0]?.score ?? 0;
+  if (bestScore < MIN_MATCH_SCORE) return { experts: [], bestScore };
+
+  const top = scored.filter((x) => x.score >= MIN_MATCH_SCORE).slice(0, maxResults);
+  return {
+    experts: top.map((x) => x.expert),
+    bestScore,
+  };
 }
 
 export type ChatMessage = { role: "user" | "assistant"; content: string; experts?: ExpertBio[] };
@@ -95,11 +172,6 @@ export default function ExpertMatchChat({
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: INTRO_MESSAGE }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const handleSend = () => {
     const trimmed = input.trim();
@@ -110,20 +182,30 @@ export default function ExpertMatchChat({
     setLoading(true);
 
     setTimeout(() => {
-      const recommended = recommendExperts(experts, trimmed);
-      const names = recommended.map((e) => e.name);
+      const qTokens = queryTokensFromUserMessage(trimmed);
       let reply: string;
-      if (recommended.length === 0) {
-        reply = "I couldn't match your question to a specific focus area, but all our experts can help with AI and expertise. Browse the profiles below and book a session with anyone who resonates with you.";
-      } else if (recommended.length === 1) {
-        reply = `Based on what you shared, I'd recommend **${names[0]}**. Their focus areas align well with your goals. Check out their profile and book a session if it's a fit.`;
+      let recommended: ExpertBio[] | undefined;
+
+      if (!isSubstantiveQuery(qTokens, trimmed)) {
+        reply = CLARIFY_SUBSTANCE_MESSAGE;
       } else {
-        reply = `Based on what you shared, I'd recommend connecting with **${names.slice(0, -1).join("** or **")}** or **${names[names.length - 1]}**. Each has relevant experience—browse their profiles below to choose.`;
+        const { experts: matched, bestScore } = matchExperts(experts, qTokens);
+        recommended = matched.length > 0 ? matched : undefined;
+        const names = matched.map((e) => e.name);
+
+        if (matched.length === 0) {
+          reply =
+            bestScore > 0
+              ? CLARIFY_LOW_CONFIDENCE_MESSAGE
+              : "I couldn't match that to a specific focus area yet. Try adding a bit more detail, or browse the profiles below—any of our experts can help with AI strategy and adoption.";
+        } else if (matched.length === 1) {
+          reply = `Based on what you shared, I'd recommend **${names[0]}**. Their focus areas align well with your goals. Check out their profile and book a session if it's a fit.`;
+        } else {
+          reply = `Based on what you shared, I'd recommend connecting with **${names.slice(0, -1).join("** or **")}** or **${names[names.length - 1]}**. Each has relevant experience—browse their profiles below to choose.`;
+        }
       }
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: reply, experts: recommended.length > 0 ? recommended : undefined },
-      ]);
+
+      setMessages((prev) => [...prev, { role: "assistant", content: reply, experts: recommended }]);
       setLoading(false);
     }, 600);
   };
@@ -135,16 +217,13 @@ export default function ExpertMatchChat({
   if (experts.length === 0) {
     const emptyInner = bookSessionHref ? (
       <div className="flex max-w-xl flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-subtitle font-plex">
-          Get started
-        </p>
         <a
           href={bookSessionHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="expert-book-cta inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3.5 py-2 text-center text-sm font-medium font-plex tracking-tight focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-1 sm:w-auto sm:self-start"
+          className="expert-book-cta inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-center text-base font-medium font-plex tracking-tight focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-1 sm:w-auto sm:self-start"
         >
-          <FaCalendarCheck size={12} className="shrink-0 opacity-95" />
+          <FaCalendarCheck size={14} className="shrink-0 opacity-95" />
           Book an Expert Session
         </a>
         <p className="text-sm leading-relaxed text-subtitle font-plex">
@@ -169,39 +248,28 @@ export default function ExpertMatchChat({
 
   const matchBody = (
     <>
-      <p className="text-xs font-semibold uppercase tracking-wide text-subtitle font-plex">
-        Get started
-      </p>
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch sm:gap-3">
+      <div className="flex max-w-xl flex-col gap-4">
         {bookSessionHref ? (
           <a
             href={bookSessionHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="expert-book-cta inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3.5 py-2 text-sm font-medium font-plex tracking-tight focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-1 text-center"
+            className="expert-book-cta inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-center text-base font-medium font-plex tracking-tight focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-1 sm:w-auto sm:self-start"
           >
-            <FaCalendarCheck size={12} className="shrink-0 opacity-95" />
+            <FaCalendarCheck size={14} className="shrink-0 opacity-95" />
             Book an Expert Session
           </a>
         ) : null}
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          className="group flex flex-1 min-w-0 items-center gap-2 rounded-md border border-card bg-white px-2 py-2 font-plex shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-1"
-          aria-expanded={open}
-        >
-          <span className="flex w-8 shrink-0 items-center justify-start">
-            <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange-strong">
-              <FaCommentDots size={16} />
-            </span>
-          </span>
-          <span className="min-w-0 flex-1 text-center text-sm font-medium leading-snug text-brand-orange-strong group-hover:text-[#965a20]">
+        <div className="w-full sm:self-start">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            className="text-left text-sm font-plex text-subtitle underline underline-offset-2 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-1 rounded-sm"
+            aria-expanded={open}
+          >
             Want us to recommend an Expert Session?
-          </span>
-          <span className="flex w-8 shrink-0 items-center justify-end text-brand-orange-strong group-hover:text-[#965a20]">
-            {open ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
-          </span>
-        </button>
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -261,7 +329,6 @@ export default function ExpertMatchChat({
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
               <div className="mt-4 flex gap-2 shrink-0">
