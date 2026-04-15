@@ -252,16 +252,16 @@ const AboutPageRoute = () => {
     <div className="min-h-screen">
       <section className="max-w-6xl mx-auto px-6 pt-4 sm:pt-6 pb-3 card-animate-in">
         <BackToHome label="Member Portal" />
-        <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-[1fr_280px] md:items-start">
+        <div
+          className={`mt-4 grid grid-cols-1 gap-6 ${about.hero_image?.url ? "md:grid-cols-[1fr_280px] md:items-start" : ""}`}
+        >
           <div className="min-w-0">
             <h1 className="text-2xl md:text-3xl font-semibold text-brand-blue font-didot">
               {about.title || "About Us"}
             </h1>
-            <p className="mt-3 max-w-2xl text-base md:text-lg text-brand-blue font-plex leading-relaxed">
-              Feedforward is a private, peer-to-peer community for senior leaders and
-              practitioners actively building the future of AI. It&apos;s a high-signal
-              space designed for sharing real-world lessons, solving complex problems,
-              and getting direct answers from those on the same journey.
+            <p className="mt-3 max-w-5xl text-base md:text-base lg:text-lg text-brand-blue font-plex leading-relaxed">
+              <span className="block">Feedforward is a private, peer-to-peer community for senior leaders and practitioners actively building the future of AI.</span>
+              <span className="block">It&apos;s a high-signal space designed for sharing real-world lessons, solving complex problems, and getting direct answers from those on the same journey.</span>
             </p>
             {about.subtitle && (
               <p className="mt-2 text-base md:text-lg text-subtitle font-plex">
