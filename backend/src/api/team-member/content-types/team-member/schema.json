@@ -47,6 +47,10 @@
       "multiple": false,
       "required": false,
       "allowedTypes": ["images"]
+    },
+    "linkedin_url": {
+      "type": "string",
+      "required": false
     }
   }
 }
