@@ -107,7 +107,7 @@ function HomeContent() {
         )}
       </div>
       <div className="p-4 sm:p-5 md:p-6 h-3/5">
-        <h3 className="text-base sm:text-lg font-semibold font-didot text-primary line-clamp-2">
+        <h3 className="text-base sm:text-lg font-semibold font-didot text-brand-blue line-clamp-2">
           {tile.title}
         </h3>
         {tile.description && (
