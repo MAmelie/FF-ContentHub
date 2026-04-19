@@ -31,7 +31,9 @@ function HomeContent() {
     setAuthChecked(true);
     const user = getUser();
     if (user) {
-      setUserName(getDisplayName(user));
+      const displayName = getDisplayName(user).trim();
+      const firstName = displayName.split(/\s+/).filter(Boolean)[0] ?? "";
+      setUserName(firstName || null);
     }
   }, [router]);
 
