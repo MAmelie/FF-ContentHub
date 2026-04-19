@@ -2,6 +2,8 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { setAuthData } from '../../../../../lib/auth';
+import type { User } from '../../../../../lib/auth';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
 /** Canonical app URL (e.g. https://memberportal.feedforward.ai). If set, we redirect here after login so the URL bar always shows the desired domain. */
@@ -55,9 +57,18 @@ function DiscordRedirectContent() {
         }
 
         // Successfully logged with Strapi
-        // Save the JWT and user info for future authenticated requests
-        localStorage.setItem('jwt', jwt);
-        localStorage.setItem('user', JSON.stringify(data.user ?? {}));
+        // Save auth data in local storage and cookie for middleware checks.
+        const rawUser = (data.user ?? {}) as Partial<User>;
+        const authUser: User = {
+          id: Number(rawUser.id ?? 0),
+          username: rawUser.username ?? 'member',
+          email: rawUser.email ?? '',
+          confirmed: Boolean(rawUser.confirmed ?? true),
+          blocked: Boolean(rawUser.blocked ?? false),
+          createdAt: rawUser.createdAt ?? '',
+          updatedAt: rawUser.updatedAt ?? '',
+        };
+        setAuthData(jwt, authUser);
         
         setText('You have been successfully logged in. You will be redirected in a few seconds...');
         
