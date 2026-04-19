@@ -37,6 +37,11 @@ const EXPERT_NET_FAQ: { category: string; q: string; a: string }[] = [
 
 type FaqItem = { q: string; a: string };
 
+const FAQ_CONTACT_EMAILS: Record<string, string> = {
+  Maddie: "maddie@feedforward.ai",
+  Gina: "gina@feedforward.ai",
+};
+
 function groupFaqByCategory(
   items: { category: string; q: string; a: string }[]
 ): { category: string; items: FaqItem[] }[] {
@@ -66,6 +71,23 @@ function faqCategoryBaseId(category: string): string {
 
 function expertSlug(bio: ExpertBio): string {
   return (bio.slug && bio.slug.trim()) ? bio.slug.trim() : slugFromName(bio.name);
+}
+
+function renderFaqAnswer(answer: string): React.ReactNode {
+  const parts = answer.split(/(Maddie|Gina)/g);
+  return parts.map((part, idx) => {
+    const email = FAQ_CONTACT_EMAILS[part];
+    if (!email) return <React.Fragment key={idx}>{part}</React.Fragment>;
+    return (
+      <a
+        key={idx}
+        href={`mailto:${email}`}
+        className="underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-blue"
+      >
+        {part}
+      </a>
+    );
+  });
 }
 
 const ExpertNetPage = () => {
@@ -391,7 +413,7 @@ const ExpertNetPage = () => {
                               {item.q}
                             </h3>
                             <p className="mt-2 text-sm leading-relaxed text-subtitle font-plex">
-                              {item.a}
+                              {renderFaqAnswer(item.a)}
                             </p>
                           </div>
                         ))}
