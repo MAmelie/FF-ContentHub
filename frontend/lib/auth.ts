@@ -12,6 +12,7 @@ export interface User {
 }
 
 const MOCK_USER: AppUser = { id: "dev-user", username: "DevUser" };
+const AUTH_COOKIE_NAME = "ff_auth";
 
 /** First name from email (e.g. ameli@example.com → "Ameli"), or username if no email. */
 export function getDisplayName(user: User | null): string {
@@ -85,6 +86,7 @@ export const logout = (): void => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('jwt');
   localStorage.removeItem('user');
+  document.cookie = `${AUTH_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
   window.location.href = '/auth/login';
 };
 
@@ -92,4 +94,6 @@ export const setAuthData = (jwt: string, user: User): void => {
   if (typeof window === 'undefined') return;
   localStorage.setItem('jwt', jwt);
   localStorage.setItem('user', JSON.stringify(user));
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${AUTH_COOKIE_NAME}=1; Max-Age=${60 * 60 * 24 * 7}; Path=/; SameSite=Lax${secure}`;
 };
