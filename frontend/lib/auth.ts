@@ -19,9 +19,15 @@ export function getDisplayName(user: User | null): string {
   if (!user) return "";
   if (user.email && user.email.includes("@")) {
     const local = user.email.split("@")[0].trim();
-    const first = local.split(/[._-]/)[0]?.trim();
-    if (first) {
-      return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+    const parts = local.split(/[._-]+/).filter(Boolean);
+    const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+
+    if (parts.length >= 2) {
+      return `${capitalize(parts[0])} ${capitalize(parts[parts.length - 1])}`;
+    }
+
+    if (parts.length === 1) {
+      return capitalize(parts[0]);
     }
   }
   return user.username;
