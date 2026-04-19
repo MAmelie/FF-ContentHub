@@ -3,8 +3,8 @@
 "use client";
 import { Suspense, useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getAllTiles, getHomepageHero, getLogo } from "../../lib/api";
-import { Tile, HomepageHero, Logo } from "@/../lib/types";
+import { getAllTiles, getHomepageHero } from "../../lib/api";
+import { Tile, HomepageHero } from "@/../lib/types";
 import { isAuthenticated, getUser, getDisplayName } from "../../lib/auth";
 import Loader from "@/components/Loader";
 
@@ -13,7 +13,6 @@ const CONTENT_TILE_ORDER = ["Meeting readouts", "Podcasts", "Additional content"
 function HomeContent() {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [hero, setHero] = useState<HomepageHero | null>(null);
-  const [logo, setLogo] = useState<Logo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
@@ -41,14 +40,12 @@ function HomeContent() {
 
     const fetchData = async () => {
       try {
-        const [tilesResponse, heroResponse, logoData] = await Promise.all([
+        const [tilesResponse, heroResponse] = await Promise.all([
           getAllTiles(searchQuery),
-          getHomepageHero(),
-          getLogo()
+          getHomepageHero()
         ]);
         setTiles(tilesResponse.tiles);
         setHero(heroResponse);
-        setLogo(logoData ?? null);
       } catch (error) {
         setError("Error fetching content.");
         console.error("Error fetching content:", error);
@@ -149,22 +146,6 @@ function HomeContent() {
             {/* ─── Hero Section ───────────────────────── */}
             <section className="mb-5 sm:mb-6 card-animate-in">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 md:gap-8">
-                {/* FFC Mark (gold) from Strapi: second logo = gold mark, else first logo */}
-                {logo?.logo?.length ? (
-                  <div className="shrink-0 flex items-center min-h-[4rem]">
-                    <img
-                      src={(() => {
-                        const base = process.env.NEXT_PUBLIC_STRAPI_URL || "";
-                        const item = logo.logo[1] ?? logo.logo[0];
-                        const path = item?.url ?? "";
-                        return path.startsWith("http") ? path : `${base.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
-                      })()}
-                      alt="FFC Mark"
-                      className="h-14 sm:h-16 md:h-20 w-auto object-contain max-w-[160px] sm:max-w-[180px]"
-                      onError={(e) => { e.currentTarget.style.display = "none"; }}
-                    />
-                  </div>
-                ) : null}
                 <div className="min-w-0">
                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-brand-blue font-didot mb-2 sm:mb-3">
                     {userName ? `Welcome back, ${userName}!` : "Welcome to Feedforward!"}
