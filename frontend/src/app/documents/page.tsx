@@ -37,6 +37,43 @@ function normalizeSubGroupId(id: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
+const STRAPI_PUBLIC_URL = (process.env.NEXT_PUBLIC_STRAPI_URL || "").replace(/\/$/, "");
+
+function getDocumentUrls(rawFileUrl?: string | null): { openUrl: string | null; downloadUrl: string | null } {
+  const raw = (rawFileUrl ?? "").trim();
+  if (!raw) return { openUrl: null, downloadUrl: null };
+
+  const isAbsolute = /^https?:\/\//i.test(raw);
+  const directUrl = isAbsolute
+    ? raw
+    : STRAPI_PUBLIC_URL
+      ? `${STRAPI_PUBLIC_URL}${raw.startsWith("/") ? raw : `/${raw}`}`
+      : null;
+
+  if (raw.startsWith("/uploads/")) {
+    const preview = `/api/file-preview?path=${encodeURIComponent(raw)}`;
+    return { openUrl: preview, downloadUrl: directUrl ?? preview };
+  }
+
+  if (isAbsolute) {
+    try {
+      const parsed = new URL(raw);
+      const strapiOrigin = STRAPI_PUBLIC_URL ? new URL(STRAPI_PUBLIC_URL).origin : "";
+      if (strapiOrigin && parsed.origin === strapiOrigin && parsed.pathname.startsWith("/uploads/")) {
+        const pathWithQuery = `${parsed.pathname}${parsed.search}`;
+        const preview = `/api/file-preview?path=${encodeURIComponent(pathWithQuery)}`;
+        return { openUrl: preview, downloadUrl: directUrl ?? preview };
+      }
+    } catch {
+      // Fall through to direct URL below.
+    }
+  }
+
+  // Fallback for non-/uploads/ and third-party absolute URLs:
+  // open directly instead of breaking.
+  return { openUrl: directUrl, downloadUrl: directUrl };
+}
+
 /** Trigger download via blob so cross-origin PDFs download instead of opening in-browser. */
 async function downloadDocument(url: string, filename: string) {
   try {
@@ -243,18 +280,16 @@ const DocumentsPage = () => {
                             )}
                             <ul className="space-y-2 list-none pl-0">
                               {docs.map((doc) => {
-                                const fileUrl =
-                                  doc.file?.url &&
-                                  `${process.env.NEXT_PUBLIC_STRAPI_URL}${doc.file.url}`;
+                                const { openUrl, downloadUrl } = getDocumentUrls(doc.file?.url);
                                 const displayDate = formatSessionDate(doc.publishedDate ?? doc.publishedAt);
                                 return (
                                   <li
                                     key={doc.id}
                                     className="group flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1.5 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                                   >
-                                    {fileUrl ? (
+                                    {openUrl ? (
                                       <a
-                                        href={fileUrl}
+                                        href={openUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
@@ -266,11 +301,11 @@ const DocumentsPage = () => {
                                         {doc.title} — {displayDate}
                                       </span>
                                     )}
-                                    {fileUrl && (
+                                    {downloadUrl && (
                                       <span className="inline-flex items-center gap-2 sm:pt-0.5">
                                         <button
                                           type="button"
-                                          onClick={() => downloadDocument(fileUrl, doc.title)}
+                                          onClick={() => downloadDocument(downloadUrl, doc.title)}
                                           className="inline-flex items-center gap-1 whitespace-nowrap text-brand-orange hover:opacity-85 text-xs sm:text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
                                         >
                                           <FaDownload size={10} />
@@ -289,18 +324,16 @@ const DocumentsPage = () => {
                       <div className="mt-4">
                         <ul className="space-y-2 list-none pl-0">
                           {bucket.directSessions!.map((doc) => {
-                            const fileUrl =
-                              doc.file?.url &&
-                              `${process.env.NEXT_PUBLIC_STRAPI_URL}${doc.file.url}`;
+                            const { openUrl, downloadUrl } = getDocumentUrls(doc.file?.url);
                             const displayDate = formatSessionDate(doc.publishedDate ?? doc.publishedAt);
                             return (
                               <li
                                 key={doc.id}
                                 className="group flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1.5 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                               >
-                                {fileUrl ? (
+                                {openUrl ? (
                                   <a
-                                    href={fileUrl}
+                                    href={openUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
@@ -312,11 +345,11 @@ const DocumentsPage = () => {
                                     {doc.title} — {displayDate}
                                   </span>
                                 )}
-                                {fileUrl && (
+                                {downloadUrl && (
                                   <span className="inline-flex items-center gap-2 sm:pt-0.5">
                                     <button
                                       type="button"
-                                      onClick={() => downloadDocument(fileUrl, doc.title)}
+                                      onClick={() => downloadDocument(downloadUrl, doc.title)}
                                       className="inline-flex items-center gap-1 whitespace-nowrap text-brand-orange hover:opacity-85 text-xs sm:text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
                                     >
                                       <FaDownload size={10} /> Download
@@ -334,18 +367,16 @@ const DocumentsPage = () => {
                   <ul className="space-y-2 list-none pl-0">
                     {"directSessions" in bucket &&
                       bucket.directSessions?.map((doc) => {
-                        const fileUrl =
-                          doc.file?.url &&
-                          `${process.env.NEXT_PUBLIC_STRAPI_URL}${doc.file.url}`;
+                        const { openUrl, downloadUrl } = getDocumentUrls(doc.file?.url);
                         const displayDate = formatSessionDate(doc.publishedDate ?? doc.publishedAt);
                         return (
                           <li
                             key={doc.id}
                             className="group flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1.5 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
                           >
-                            {fileUrl ? (
+                            {openUrl ? (
                               <a
-                                href={fileUrl}
+                                href={openUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
@@ -357,11 +388,11 @@ const DocumentsPage = () => {
                                 {doc.title} — {displayDate}
                               </span>
                             )}
-                            {fileUrl && (
+                            {downloadUrl && (
                               <span className="inline-flex items-center gap-2 sm:pt-0.5">
                                 <button
                                   type="button"
-                                  onClick={() => downloadDocument(fileUrl, doc.title)}
+                                  onClick={() => downloadDocument(downloadUrl, doc.title)}
                                   className="inline-flex items-center gap-1 whitespace-nowrap text-brand-orange hover:opacity-85 text-xs sm:text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
                                 >
                                   <FaDownload size={10} />
