@@ -12,6 +12,17 @@ import { EXPERT_SESSION_CALENDLY_URL } from "@/lib/expertSessionCalendly";
 import { FaUser, FaArrowRight, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 const EXPERT_NET_FAQ: { category: string; q: string; a: string }[] = [
+  // Overview
+  {
+    category: "Overview",
+    q: "What are expert sessions?",
+    a: "Expert Sessions: 60-minute virtual advisory sessions with a Feedforward expert on topics of your choice. Sessions can take many forms: fireside chats, pressure-testing your AI strategy, live red-teaming your products, and more. Booked with membership credits. Standard meeting size (typically < 12-15 people), internal use only. No prep call, just a short intake form, and we'll handle the rest.",
+  },
+  {
+    category: "Overview",
+    q: "What are speaking engagements?",
+    a: "Speaking Engagements: Presentation style talks designed for larger audiences such as company-wide townhalls, department meetings, offsites, leadership summits, or team kickoffs. Can be virtual or in person. Each engagement includes a 30 minute prep call so the speaker can tailor the content to your audience and goals. Available at an additional cost beyond your membership.",
+  },
   // Participation & Attendance
   { category: "Participation & Attendance", q: "What counts as an expert session?", a: "Expert sessions are company-specific advisory and consultation sessions, not speaking engagements. Many experts in our network also do speaking engagements at different rates. If you're interested in a speaking engagement, Feedforward can facilitate." },
   { category: "Participation & Attendance", q: "Who can we invite to expert sessions?", a: "Anyone from your organization can attend, including non-members and cross-functional partners. Use the Book an Expert Session button on this page to choose a time. If you want colleagues to book their own sessions using your credits or need help with roster logistics, contact Maddie." },
@@ -237,10 +248,28 @@ const ExpertNetPage = () => {
             </h1>
             <div className="mt-3 max-w-none space-y-2 text-base leading-relaxed text-subtitle font-plex [text-wrap:pretty]">
               <p>
-                Expert sessions are company-specific advisory and consultation sessions, not speaking engagements. Many experts in our network also do speaking engagements at different rates.
+                Feedforward expert sessions are company-specific advisory conversations with members of our expert network, conducted virtually throughout the year. They are not speaking engagements.
               </p>
               <p>
-                If you&apos;re interested in a speaking engagement, Feedforward can facilitate.
+                Use this page to browse our experts&apos; backgrounds and book a session directly. Not sure who to book with? Ask our AI guide for a recommendation based on your goals.
+              </p>
+              <p>
+                For more on expert sessions and how credits work, see the{" "}
+                <a
+                  href="#faq"
+                  onClick={scrollToFaq}
+                  className="font-medium text-brand-blue underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
+                >
+                  FAQs
+                </a>{" "}
+                below. For speaking engagements,{" "}
+                <a
+                  href="mailto:maddie@feedforward.ai"
+                  className="font-medium text-brand-blue underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
+                >
+                  contact us
+                </a>
+                .
               </p>
             </div>
             <ExpertMatchChat

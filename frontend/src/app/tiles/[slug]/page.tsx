@@ -52,6 +52,19 @@ function isPdfDocument(doc: Document): boolean {
   return mime.includes("pdf");
 }
 
+function formatMonthYear(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function parseCanonicalDateToTimestamp(dateLabel: string): number | null {
+  const normalized = dateLabel.replace(/^sept\b/i, "Sep");
+  const ts = new Date(normalized).getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
+
 const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params);
   const [tile, setTile] = useState<Tile | null>(null);
@@ -228,6 +241,24 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
       return false;
     }).map((g) => ({ id: g.id, title: `${g.emoji} ${g.title}`, slug: g.id }));
   }, [isMemberSessions, groupedCanonical]);
+
+  const memberSessionsCoverage = useMemo(() => {
+    if (!isMemberSessions) return null;
+    const timestamps = CANONICAL_MEMBER_SESSIONS
+      .map((session) => parseCanonicalDateToTimestamp(session.date))
+      .filter((ts): ts is number => ts !== null);
+    if (timestamps.length === 0) return null;
+
+    const earliest = new Date(Math.min(...timestamps));
+    const latest = new Date(Math.max(...timestamps));
+    const lastUpdated = formatMonthYear(latest);
+    const dateRange =
+      earliest.getFullYear() === latest.getFullYear() && earliest.getMonth() === latest.getMonth()
+        ? formatMonthYear(earliest)
+        : `${formatMonthYear(earliest)} – ${formatMonthYear(latest)}`;
+
+    return { lastUpdated, dateRange };
+  }, [isMemberSessions]);
 
   const tableOfContents = useMemo(() => {
     if (!tile?.docs) return [];
@@ -470,9 +501,11 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
             <p className="mt-2 text-xl text-gray-700 font-plex font-medium">
               Readout Archive & Thematic Groupings
             </p>
-            <p className="mt-1 text-base text-subtitle font-plex">
-              Last updated: March 2026 &nbsp;&bull;&nbsp; Sessions from Jan 2025 – Feb 2026
-            </p>
+            {memberSessionsCoverage && (
+              <p className="mt-1 text-base text-subtitle font-plex">
+                Last updated: {memberSessionsCoverage.lastUpdated} &nbsp;&bull;&nbsp; Sessions from {memberSessionsCoverage.dateRange}
+              </p>
+            )}
 
             <div className="mt-6 mb-4">
               <div className="relative max-w-xl">
