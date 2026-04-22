@@ -25,6 +25,20 @@ function formatSessionDate(iso?: string | null): string {
   });
 }
 
+function formatMonthYear(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getDocumentTimestamp(doc: Document): number | null {
+  const raw = doc.publishedDate ?? doc.publishedAt;
+  if (!raw) return null;
+  const ts = new Date(raw).getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
+
 function normalizeSubGroupId(id: string): string {
   // Strapi subgroup values are stored as strings; depending on how you created the
   // admin selections they might include spaces/slashes. Normalize both sides so
@@ -142,6 +156,23 @@ const DocumentsPage = () => {
     });
   }, [documentsWithGroup, searchQuery]);
 
+  const archiveCoverage = useMemo(() => {
+    const timestamps = documents
+      .map(getDocumentTimestamp)
+      .filter((ts): ts is number => ts !== null);
+    if (timestamps.length === 0) return null;
+
+    const earliest = new Date(Math.min(...timestamps));
+    const latest = new Date(Math.max(...timestamps));
+    const lastUpdated = formatMonthYear(latest);
+    const dateRange =
+      earliest.getFullYear() === latest.getFullYear() && earliest.getMonth() === latest.getMonth()
+        ? formatMonthYear(earliest)
+        : `${formatMonthYear(earliest)} – ${formatMonthYear(latest)}`;
+
+    return { lastUpdated, dateRange };
+  }, [documents]);
+
   /** Group filtered documents by effectiveGroup / sessionSubGroup, sorted by publishedDate (then order) within each bucket. */
   const groupedBySection = useMemo(() => {
     const byGroup: Record<
@@ -224,9 +255,11 @@ const DocumentsPage = () => {
       <p className="mt-2 text-xl text-gray-700 font-plex font-medium">
         Archive
       </p>
-      <p className="mt-1 text-base text-subtitle font-plex">
-        Last updated: March 2026 &nbsp;&bull;&nbsp; Sessions from 2024  – March 2026
-      </p>
+      {archiveCoverage && (
+        <p className="mt-1 text-base text-subtitle font-plex">
+          Last updated: {archiveCoverage.lastUpdated} &nbsp;&bull;&nbsp; Sessions from {archiveCoverage.dateRange}
+        </p>
+      )}
 
       <div className="mt-6 mb-6">
         <div className="relative w-full max-w-2xl">
