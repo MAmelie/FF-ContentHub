@@ -105,6 +105,7 @@ const ExpertNetPage = () => {
   const [expertNet, setExpertNet] = useState<ExpertNet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAiGuideOpen, setIsAiGuideOpen] = useState(false);
   const [openFaqCategories, setOpenFaqCategories] = useState<Set<string>>(
     () => new Set()
   );
@@ -129,6 +130,12 @@ const ExpertNetPage = () => {
   const scrollToFaq = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  const openAiGuide = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setIsAiGuideOpen(true);
+    document.getElementById("expert-ai-guide")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, []);
 
   useEffect(() => {
@@ -251,33 +258,45 @@ const ExpertNetPage = () => {
                 Feedforward expert sessions are company-specific advisory conversations with members of our expert network, conducted virtually throughout the year. They are not speaking engagements.
               </p>
               <p>
-                Use this page to browse our experts&apos; backgrounds and book a session directly. Not sure who to book with? Ask our AI guide for a recommendation based on your goals.
+                Use this page to browse our experts&apos; backgrounds and book a session directly. Not sure who to book with?{" "}
+                <a
+                  href="#expert-ai-guide"
+                  onClick={openAiGuide}
+                  className="font-medium text-subtitle underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
+                >
+                  Ask our AI guide for a recommendation
+                </a>{" "}
+                based on your goals.
               </p>
               <p>
                 For more on expert sessions and how credits work, see the{" "}
                 <a
                   href="#faq"
                   onClick={scrollToFaq}
-                  className="font-medium text-brand-blue underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
+                  className="font-medium text-subtitle underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
                 >
                   FAQs
                 </a>{" "}
                 below. For speaking engagements,{" "}
                 <a
                   href="mailto:maddie@feedforward.ai"
-                  className="font-medium text-brand-blue underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
+                  className="font-medium text-subtitle underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
                 >
                   contact us
                 </a>
                 .
               </p>
             </div>
-            <ExpertMatchChat
-              experts={bios}
-              getExpertSlug={expertSlug}
-              bookSessionHref={EXPERT_SESSION_CALENDLY_URL}
-              embedInCard
-            />
+            <div id="expert-ai-guide">
+              <ExpertMatchChat
+                experts={bios}
+                getExpertSlug={expertSlug}
+                bookSessionHref={EXPERT_SESSION_CALENDLY_URL}
+                embedInCard
+                open={isAiGuideOpen}
+                onOpenChange={setIsAiGuideOpen}
+              />
+            </div>
           </div>
           <a
             href="#faq"

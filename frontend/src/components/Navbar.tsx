@@ -325,7 +325,7 @@ const Navbar = () => {
                 isAboutActive ? "text-brand-orange bg-peach/30" : "text-brand-blue hover:bg-peach/30"
               }`}
             >
-              About Us
+              Our Team
             </Link>
           </div>
         )}
@@ -529,7 +529,7 @@ const Navbar = () => {
                 isAboutActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
               }`}
             >
-              About Us
+              Our Team
               {isAboutActive && (
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
               )}

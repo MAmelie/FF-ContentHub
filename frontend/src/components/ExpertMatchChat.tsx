@@ -160,6 +160,10 @@ interface ExpertMatchChatProps {
   bookSessionHref?: string;
   /** Omit outer section spacing when rendered inside a parent card (e.g. expert-net hero). */
   embedInCard?: boolean;
+  /** Optional controlled open state from parent. */
+  open?: boolean;
+  /** Optional open-state callback for parent coordination. */
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function ExpertMatchChat({
@@ -167,11 +171,19 @@ export default function ExpertMatchChat({
   getExpertSlug,
   bookSessionHref,
   embedInCard = false,
+  open,
+  onOpenChange,
 }: ExpertMatchChatProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: INTRO_MESSAGE }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const isOpen = open ?? internalOpen;
+
+  const setOpenState = (nextOpen: boolean) => {
+    if (open === undefined) setInternalOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  };
 
   const handleSend = () => {
     const trimmed = input.trim();
@@ -260,19 +272,9 @@ export default function ExpertMatchChat({
             Book an Expert Session
           </a>
         ) : null}
-        <div className="w-full sm:self-start">
-          <button
-            type="button"
-            onClick={() => setOpen(!open)}
-            className="text-left text-sm font-plex text-subtitle underline underline-offset-2 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-1 rounded-sm"
-            aria-expanded={open}
-          >
-            Want us to recommend an Expert Session?
-          </button>
-        </div>
       </div>
 
-      {open && (
+      {isOpen && (
         <div className="mt-4 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="p-4 max-h-[420px] flex flex-col bg-gray-50/50">
               <div className="flex-1 overflow-y-auto space-y-4 min-h-[200px] pr-2">

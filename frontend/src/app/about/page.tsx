@@ -10,7 +10,7 @@ import BackToHome from "../../components/BackToHome";
 
 /** Section titles aligned with org PDF (Founders + Core Team brochure). */
 const GROUP_LABELS: Record<TeamGroup, string> = {
-  founding: "Founders",
+  founding: "Founding Team",
   core: "Core Team",
   advisory: "Advisory",
   operations: "Operations",
@@ -183,6 +183,8 @@ function TeamMemberCompactCard({
 }
 
 const GROUP_ORDER: TeamGroup[] = ["founding", "core", "advisory", "operations"];
+const CORE_TEAM_ROW_ONE_ORDER = ["maddie", "michelle", "lennart", "gina"];
+const CORE_TEAM_ROW_TWO_ORDER = ["jenny", "erica"];
 
 const AboutPageRoute = () => {
   const [about, setAbout] = useState<AboutPage | null>(null);
@@ -196,11 +198,11 @@ const AboutPageRoute = () => {
         if (data && data.publishedAt) {
           setAbout(data);
         } else {
-          setError("About Us content is not yet published.");
+          setError("Our Team content is not yet published.");
         }
       } catch (err) {
-        console.error("Error fetching About Us content:", err);
-        setError("Failed to load About Us content.");
+        console.error("Error fetching Our Team content:", err);
+        setError("Failed to load Our Team content.");
       } finally {
         setLoading(false);
       }
@@ -243,7 +245,7 @@ const AboutPageRoute = () => {
   if (!about) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 text-center">
-        <p className="text-subtitle text-lg font-plex">No About Us content found.</p>
+        <p className="text-subtitle text-lg font-plex">No Our Team content found.</p>
       </div>
     );
   }
@@ -257,7 +259,7 @@ const AboutPageRoute = () => {
         >
           <div className="min-w-0">
             <h1 className="text-2xl md:text-3xl font-semibold text-brand-blue font-didot">
-              {about.title || "About Us"}
+              Feed Forward
             </h1>
             <p className="mt-3 max-w-5xl text-base md:text-base lg:text-lg text-brand-blue font-plex leading-relaxed">
               <span className="block">Feedforward is a private, peer-to-peer community for senior leaders and practitioners actively building the future of AI.</span>
@@ -279,7 +281,7 @@ const AboutPageRoute = () => {
           {about.hero_image?.url ? (
             <img
               src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${about.hero_image.url}`}
-              alt={about.hero_image.alternativeText || about.title || "About Us"}
+              alt={about.hero_image.alternativeText || about.title || "Our Team"}
               className="w-full h-56 md:h-48 rounded-xl object-cover border border-card shadow-sm"
             />
           ) : null}
@@ -323,22 +325,57 @@ const AboutPageRoute = () => {
                   ))}
                 </div>
               ) : groupKey === "core" ? (
-                <div className="w-full overflow-x-auto overscroll-x-contain pb-1 -mx-1 px-1 sm:mx-0 sm:px-0">
-                  <div
-                    className="grid gap-3 sm:gap-4 w-full"
-                    style={{
-                      gridTemplateColumns: `repeat(${Math.max(members.length, 1)}, minmax(10rem, 1fr))`,
-                    }}
-                  >
-                    {members.map((member, idx) => (
-                      <CoreTeamRowCard
-                        key={member.id}
-                        member={member}
-                        delayMs={idx * 45}
-                      />
-                    ))}
-                  </div>
-                </div>
+                (() => {
+                  const indexByName = new Map(
+                    members.map((member) => [member.name.trim().toLowerCase(), member]),
+                  );
+                  const rowOne = CORE_TEAM_ROW_ONE_ORDER.map((name) =>
+                    indexByName.get(name),
+                  ).filter(Boolean) as typeof members;
+                  const rowTwo = CORE_TEAM_ROW_TWO_ORDER.map((name) =>
+                    indexByName.get(name),
+                  ).filter(Boolean) as typeof members;
+                  const usedIds = new Set([...rowOne, ...rowTwo].map((member) => member.id));
+                  const remainder = members.filter((member) => !usedIds.has(member.id));
+
+                  return (
+                    <div className="space-y-4">
+                      {rowOne.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                          {rowOne.map((member, idx) => (
+                            <CoreTeamRowCard
+                              key={member.id}
+                              member={member}
+                              delayMs={idx * 45}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      {rowTwo.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                          {rowTwo.map((member, idx) => (
+                            <CoreTeamRowCard
+                              key={member.id}
+                              member={member}
+                              delayMs={(rowOne.length + idx) * 45}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      {remainder.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                          {remainder.map((member, idx) => (
+                            <CoreTeamRowCard
+                              key={member.id}
+                              member={member}
+                              delayMs={(rowOne.length + rowTwo.length + idx) * 45}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3">
                   {members.map((member, idx) => (
