@@ -8,6 +8,11 @@ import BackToHome from "../../components/BackToHome";
 import { FaSearch, FaDownload } from "react-icons/fa";
 import { MEMBER_SESSION_GROUPS } from "../tiles/member-sessions-config";
 
+interface SemanticSearchResult {
+  id: string;
+  score: number;
+}
+
 function isPdfDocument(doc: Document): boolean {
   const mime = (doc.file?.mime ?? doc.file?.mimeType ?? "").toString().toLowerCase();
   if (!mime) return false;
@@ -30,6 +35,14 @@ function formatMonthYear(date: Date): string {
     month: "long",
     year: "numeric",
   });
+}
+
+function getDocumentDateKey(doc: Document): string | null {
+  const raw = doc.publishedDate ?? doc.publishedAt;
+  if (!raw) return null;
+  const d = new Date(raw);
+  if (!Number.isFinite(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
 }
 
 function getDocumentTimestamp(doc: Document): number | null {
@@ -110,6 +123,8 @@ const DocumentsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [semanticResults, setSemanticResults] = useState<SemanticSearchResult[]>([]);
+  const [semanticLoading, setSemanticLoading] = useState(false);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -127,6 +142,38 @@ const DocumentsPage = () => {
     fetchDocuments();
   }, []);
 
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setSemanticResults([]);
+      setSemanticLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setSemanticLoading(true);
+        const res = await fetch("/api/search/documents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ q }),
+        });
+        if (!res.ok) {
+          setSemanticResults([]);
+          return;
+        }
+        const data = (await res.json()) as { results?: SemanticSearchResult[] };
+        setSemanticResults(Array.isArray(data.results) ? data.results : []);
+      } catch {
+        setSemanticResults([]);
+      } finally {
+        setSemanticLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   /** Effective group: "slides" if title contains "slides", else Strapi sessionGroup, else "more". All PDFs appear. */
   function effectiveSessionGroup(doc: Document): string {
     if (doc.title.toLowerCase().includes("slides")) return "slides";
@@ -139,8 +186,8 @@ const DocumentsPage = () => {
     return documents.map((doc) => ({ doc, effectiveGroup: effectiveSessionGroup(doc) }));
   }, [documents]);
 
-  /** Filter by search: title or section/group name. */
-  const filteredDocumentsWithGroup = useMemo(() => {
+  /** Local keyword filter by title/group labels (legacy behavior). */
+  const localFilteredDocumentsWithGroup = useMemo(() => {
     if (!searchQuery.trim()) return documentsWithGroup;
     const q = searchQuery.toLowerCase().trim();
     return documentsWithGroup.filter(({ doc, effectiveGroup }) => {
@@ -155,6 +202,65 @@ const DocumentsPage = () => {
       return false;
     });
   }, [documentsWithGroup, searchQuery]);
+
+  /** Effective result set: semantic matches when available, otherwise local keyword filter. */
+  const rankedDocumentsWithGroup = useMemo(() => {
+    if (!searchQuery.trim()) return localFilteredDocumentsWithGroup;
+    if (semanticResults.length === 0) return localFilteredDocumentsWithGroup;
+
+    const scoreById = new Map(semanticResults.map((result) => [result.id, result.score]));
+    const semanticMatches = documentsWithGroup.filter(({ doc }) => scoreById.has(String(doc.id)));
+
+    return [...semanticMatches].sort((a, b) => {
+      const scoreA = scoreById.get(String(a.doc.id)) ?? -Infinity;
+      const scoreB = scoreById.get(String(b.doc.id)) ?? -Infinity;
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      return a.doc.title.localeCompare(b.doc.title, undefined, { sensitivity: "base" });
+    });
+  }, [documentsWithGroup, localFilteredDocumentsWithGroup, searchQuery, semanticResults]);
+
+  const semanticScoreById = useMemo(
+    () => new Map(semanticResults.map((result) => [result.id, result.score])),
+    [semanticResults],
+  );
+  const isSemanticMode = Boolean(searchQuery.trim()) && semanticResults.length > 0;
+
+  const semanticDocumentsWithRelatedSlides = useMemo(() => {
+    if (!isSemanticMode) return rankedDocumentsWithGroup;
+
+    const byId = new Map(rankedDocumentsWithGroup.map((entry) => [String(entry.doc.id), entry]));
+    const result: Array<{ doc: Document; effectiveGroup: string }> = [...rankedDocumentsWithGroup];
+
+    const readoutDateKeys = new Set(
+      rankedDocumentsWithGroup
+        .filter(({ doc }) => !doc.title.toLowerCase().includes("slides"))
+        .map(({ doc }) => getDocumentDateKey(doc))
+        .filter((key): key is string => Boolean(key)),
+    );
+
+    if (readoutDateKeys.size === 0) return result;
+
+    for (const { doc, effectiveGroup } of documentsWithGroup) {
+      const isSlide = doc.title.toLowerCase().includes("slides");
+      if (!isSlide) continue;
+      const dateKey = getDocumentDateKey(doc);
+      if (!dateKey || !readoutDateKeys.has(dateKey)) continue;
+      if (byId.has(String(doc.id))) continue;
+
+      result.push({ doc, effectiveGroup });
+      byId.set(String(doc.id), { doc, effectiveGroup });
+    }
+
+    return result.sort((a, b) => {
+      const scoreA = semanticScoreById.get(String(a.doc.id)) ?? -Infinity;
+      const scoreB = semanticScoreById.get(String(b.doc.id)) ?? -Infinity;
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      const tsA = getDocumentTimestamp(a.doc) ?? 0;
+      const tsB = getDocumentTimestamp(b.doc) ?? 0;
+      if (tsA !== tsB) return tsB - tsA;
+      return a.doc.title.localeCompare(b.doc.title, undefined, { sensitivity: "base" });
+    });
+  }, [documentsWithGroup, isSemanticMode, rankedDocumentsWithGroup, semanticScoreById]);
 
   const archiveCoverage = useMemo(() => {
     const timestamps = documents
@@ -173,7 +279,7 @@ const DocumentsPage = () => {
     return { lastUpdated, dateRange };
   }, [documents]);
 
-  /** Group filtered documents by effectiveGroup / sessionSubGroup, sorted by publishedDate (then order) within each bucket. */
+  /** Group filtered documents by effectiveGroup / sessionSubGroup. */
   const groupedBySection = useMemo(() => {
     const byGroup: Record<
       string,
@@ -181,7 +287,14 @@ const DocumentsPage = () => {
       | { subGroups: Record<string, Document[]>; directSessions?: Document[] }
     > = {};
 
+    const hasSemanticRanking = Boolean(searchQuery.trim()) && semanticResults.length > 0;
+
     const sortDocs = (a: Document, b: Document) => {
+      if (hasSemanticRanking) {
+        const scoreA = semanticScoreById.get(String(a.id)) ?? -Infinity;
+        const scoreB = semanticScoreById.get(String(b.id)) ?? -Infinity;
+        if (scoreA !== scoreB) return scoreB - scoreA;
+      }
       const dateA = a.publishedDate ?? a.publishedAt ? new Date(a.publishedDate ?? a.publishedAt).getTime() : 0;
       const dateB = b.publishedDate ?? b.publishedAt ? new Date(b.publishedDate ?? b.publishedAt).getTime() : 0;
       if (dateB !== dateA) return dateB - dateA;
@@ -191,7 +304,7 @@ const DocumentsPage = () => {
     };
 
     for (const group of MEMBER_SESSION_GROUPS) {
-      const docsInGroup = filteredDocumentsWithGroup
+        const docsInGroup = rankedDocumentsWithGroup
         .filter(({ effectiveGroup }) => effectiveGroup === group.id)
         .map(({ doc }) => doc);
       if (docsInGroup.length === 0) continue;
@@ -230,7 +343,7 @@ const DocumentsPage = () => {
     }
 
     return byGroup;
-  }, [filteredDocumentsWithGroup]);
+  }, [rankedDocumentsWithGroup, searchQuery, semanticResults, semanticScoreById]);
 
   if (loading)
     return (
@@ -273,11 +386,65 @@ const DocumentsPage = () => {
             aria-label="Search documents by title or section"
           />
         </div>
+        {semanticLoading && <p className="mt-2 text-sm text-subtitle font-plex">Searching...</p>}
       </div>
 
-      {filteredDocumentsWithGroup.length === 0 ? (
+      {semanticDocumentsWithRelatedSlides.length === 0 ? (
         <div className="text-subtitle p-12 text-center font-plex">
-          {searchQuery ? "No documents match your search" : "No PDF documents found."}
+          {searchQuery ? (
+            <>
+              <p>No documents match your search.</p>
+              <p className="mt-2 text-sm">Try broader terms or fewer words.</p>
+            </>
+          ) : (
+            "No PDF documents found."
+          )}
+        </div>
+      ) : isSemanticMode ? (
+        <div className="space-y-3 mt-8">
+          <h2 className="text-xl font-bold text-brand-blue font-didot">Top matches</h2>
+          <ul className="space-y-2 list-none pl-0">
+            {semanticDocumentsWithRelatedSlides.slice(0, 16).map(({ doc }) => {
+              const { openUrl, downloadUrl } = getDocumentUrls(doc.file?.url);
+              const displayDate = formatSessionDate(doc.publishedDate ?? doc.publishedAt);
+              const isRelatedSlide = doc.title.toLowerCase().includes("slides") && !semanticScoreById.has(String(doc.id));
+              return (
+                <li
+                  key={doc.id}
+                  className="group flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1.5 py-1.5 border-b border-gray-100 last:border-b-0 transition-colors"
+                >
+                  {openUrl ? (
+                    <a
+                      href={openUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere] hover:!text-[#e9a059] group-hover:!text-[#e9a059] transition-colors cursor-pointer"
+                    >
+                      {doc.title} — {displayDate}
+                      {isRelatedSlide ? " (related slides)" : ""}
+                    </a>
+                  ) : (
+                    <span className="min-w-0 text-base sm:text-lg leading-snug text-primary font-plex whitespace-normal break-words [overflow-wrap:anywhere]">
+                      {doc.title} — {displayDate}
+                      {isRelatedSlide ? " (related slides)" : ""}
+                    </span>
+                  )}
+                  {downloadUrl && (
+                    <span className="inline-flex items-center gap-2 sm:pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => downloadDocument(downloadUrl, doc.title)}
+                        className="inline-flex items-center gap-1 whitespace-nowrap text-brand-orange hover:opacity-85 text-xs sm:text-sm font-medium bg-transparent border-0 cursor-pointer p-0 font-plex"
+                      >
+                        <FaDownload size={10} />
+                        Download
+                      </button>
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       ) : (
         <div className="space-y-10 mt-8">
@@ -445,8 +612,8 @@ const DocumentsPage = () => {
       )}
 
       <div className="mt-8 text-base text-subtitle font-plex">
-        Total: {filteredDocumentsWithGroup.length} document
-        {filteredDocumentsWithGroup.length !== 1 ? "s" : ""}
+        Total: {semanticDocumentsWithRelatedSlides.length} document
+        {semanticDocumentsWithRelatedSlides.length !== 1 ? "s" : ""}
       </div>
     </div>
   );
