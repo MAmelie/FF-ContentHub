@@ -4,7 +4,6 @@ import { loadDocumentIndex, searchDocumentIndex } from "@/lib/ai/document-index"
 
 const MIN_QUERY_LENGTH = 2;
 const MIN_SCORE = Number.parseFloat(process.env.SEARCH_MIN_SCORE || "0.2");
-const HIGH_CONFIDENCE_SCORE = Number.parseFloat(process.env.SEARCH_HIGH_CONFIDENCE_SCORE || "0.48");
 const DYNAMIC_SCORE_DELTA = Number.parseFloat(process.env.SEARCH_DYNAMIC_DELTA || "0.08");
 const STOPWORDS = new Set([
   "the",
@@ -87,31 +86,8 @@ function tokenizeForMatch(input: string): string[] {
     .filter((token) => token.length >= 3 && !STOPWORDS.has(token));
 }
 
-/** Two or more "words" (alnum length ≥2), e.g. "ai governance" — not a single vague term. */
-function isMultiWordInput(input: string): boolean {
-  const parts = input
-    .toLowerCase()
-    .trim()
-    .split(/\s+/)
-    .map((w) => w.replace(/[^a-z0-9]+/g, ""))
-    .filter((w) => w.length >= 2);
-  return parts.length >= 2;
-}
-
-/**
- * One searchable token and the user only typed one short phrase worth guarding
- * (e.g. "blockchain"). False for "ai governance" because "ai" counts as a second word.
- */
-function isNarrowSingleTermQuery(input: string): boolean {
-  const tokens = tokenizeForMatch(input);
-  if (tokens.length !== 1) return false;
-  return !isMultiWordInput(input);
-}
-
-function hasLexicalSignalInIndex(query: string, corpusText: string): boolean {
-  const tokens = tokenizeForMatch(query);
-  if (tokens.length === 0) return false;
-  return tokens.some((token) => corpusText.includes(token));
+function matchTokensFromExpandedQuery(expandedQuery: string): string[] {
+  return [...new Set(tokenizeForMatch(expandedQuery))];
 }
 
 function buildExpandedQuery(input: string): string {
@@ -135,6 +111,14 @@ function buildExpandedQuery(input: string): string {
   return `${input} ${Array.from(extraTokens).join(" ")}`.trim();
 }
 
+function shouldDebugQuery(input: string): boolean {
+  const normalized = input.toLowerCase().trim().replace(/\s+/g, " ");
+  if (process.env.SEARCH_DEBUG_LOG === "true") return true;
+  return (
+    normalized === "machine learning" || normalized === "governance" || normalized === "consulting"
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as { q?: unknown };
@@ -148,34 +132,50 @@ export async function POST(req: Request) {
     }
 
     const expandedQuery = buildExpandedQuery(q);
+    const debugQuery = shouldDebugQuery(q);
     const queryEmbedding = await embedText(expandedQuery);
     const index = await loadDocumentIndex();
-    const results = searchDocumentIndex(index, queryEmbedding, {
+    const rawResults = searchDocumentIndex(index, queryEmbedding, {
       queryText: expandedQuery,
-      minScore: Number.isFinite(MIN_SCORE) ? MIN_SCORE : 0.2,
+      minScore: 0,
     });
+    const configuredMinScore = Number.isFinite(MIN_SCORE) ? MIN_SCORE : 0.2;
+    const results = rawResults.filter((result) => result.score >= configuredMinScore);
+    if (debugQuery) {
+      const allScorePreview = rawResults.slice(0, 10).map((result) => {
+        const chunk = index.chunks.find((item) => String(item.documentId) === String(result.id));
+        return {
+          id: result.id,
+          title: chunk?.title || "Untitled",
+          score: Number(result.score.toFixed(4)),
+        };
+      });
+      const preview = results.slice(0, 25).map((result) => {
+        const chunk = index.chunks.find((item) => String(item.documentId) === String(result.id));
+        return {
+          id: result.id,
+          title: chunk?.title || "Untitled",
+          score: Number(result.score.toFixed(4)),
+        };
+      });
+      console.log("[search-debug] all-scores-before-min-filter", {
+        query: q,
+        expandedQuery,
+        top: allScorePreview,
+      });
+      console.log("[search-debug] raw-ranking", {
+        query: q,
+        expandedQuery,
+        minScore: configuredMinScore,
+        dynamicDelta: Number.isFinite(DYNAMIC_SCORE_DELTA) ? DYNAMIC_SCORE_DELTA : 0.08,
+        top: preview,
+      });
+    }
     if (results.length === 0) {
       return NextResponse.json({ results: [] });
     }
 
-    const topScore = results[0]?.score ?? -Infinity;
-    const corpusText = index.chunks
-      .map((chunk) => `${chunk.title || ""} ${chunk.textPreview || ""}`.toLowerCase())
-      .join(" ");
-    const hasLexicalSignal = hasLexicalSignalInIndex(q, corpusText);
-    const confidenceThreshold = Number.isFinite(HIGH_CONFIDENCE_SCORE) ? HIGH_CONFIDENCE_SCORE : 0.48;
-    const queryTokens = tokenizeForMatch(q);
-    const multiWord = isMultiWordInput(q);
-
-    // Unknown single-term queries should not hallucinate nearest-neighbor matches.
-    if (isNarrowSingleTermQuery(q) && !hasLexicalSignal) {
-      return NextResponse.json({ results: [] });
-    }
-
-    // Multi-word queries can rely on embeddings when previews never contain rare terms (e.g. "governance").
-    if (!hasLexicalSignal && topScore < (multiWord ? MIN_SCORE : confidenceThreshold)) {
-      return NextResponse.json({ results: [] });
-    }
+    const queryTokens = matchTokensFromExpandedQuery(expandedQuery);
 
     const docTextById = new Map<string, string>();
     for (const chunk of index.chunks) {
@@ -190,13 +190,6 @@ export async function POST(req: Request) {
         const docText = docTextById.get(String(result.id)) || "";
         const matchedCount = queryTokens.reduce((count, token) => (docText.includes(token) ? count + 1 : count), 0);
         return { ...result, matchedCount };
-      })
-      .filter((item) => {
-        if (queryTokens.length === 0) return true;
-        if (item.matchedCount >= 1) return true;
-        // Same as confidence gate: allow ranked semantic hits for multi-word if no token appears in any preview.
-        if (multiWord && !hasLexicalSignal) return true;
-        return false;
       })
       .map((item) => {
         if (queryTokens.length === 2 && item.matchedCount === 2) {
@@ -218,6 +211,23 @@ export async function POST(req: Request) {
       })
       .sort((a, b) => b.score - a.score)
       .map(({ id, score }) => ({ id, score }));
+
+    if (debugQuery) {
+      const finalPreview = gated.slice(0, 25).map((result) => {
+        const chunk = index.chunks.find((item) => String(item.documentId) === String(result.id));
+        return {
+          id: result.id,
+          title: chunk?.title || "Untitled",
+          score: Number(result.score.toFixed(4)),
+        };
+      });
+      console.log("[search-debug] after-gating", {
+        query: q,
+        resultCountBefore: results.length,
+        resultCountAfter: gated.length,
+        top: finalPreview,
+      });
+    }
 
     return NextResponse.json({ results: gated });
   } catch (error) {
