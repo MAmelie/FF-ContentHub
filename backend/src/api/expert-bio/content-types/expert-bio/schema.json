@@ -30,6 +30,10 @@
       "required": false,
       "allowedTypes": ["images", "files", "videos", "audios"]
     },
+    "profileUrl": {
+      "type": "string",
+      "required": false
+    },
     "title": {
       "type": "string",
       "required": true

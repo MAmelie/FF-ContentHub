@@ -77,6 +77,8 @@ export interface ExpertBio {
   order?: number | null;
   name: string;
   slug?: string;
+  /** Full URL (https://…) for website or LinkedIn; name links here on the profile page when set. */
+  profileUrl?: string | null;
   title: string;
   photo?: ImageData;
   bio: string;

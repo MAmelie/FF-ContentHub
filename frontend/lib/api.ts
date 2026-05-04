@@ -249,6 +249,7 @@ function normalizeExpertBio(raw: Record<string, unknown>): {
   order?: number | null;
   name: string;
   slug?: string;
+  profileUrl?: string | null;
   title: string;
   photo?: ReturnType<typeof normalizeMedia>;
   bio: string;
@@ -264,11 +265,18 @@ function normalizeExpertBio(raw: Record<string, unknown>): {
   const photo = normalizeMedia(raw.photo ?? attrs?.photo);
   const orderRaw = raw.order ?? attrs?.order;
   const order = typeof orderRaw === "number" && !Number.isNaN(orderRaw) ? orderRaw : null;
+  const profileUrlRaw =
+    (raw.profileUrl as string) ?? (attrs?.profileUrl as string) ?? "";
+  const profileUrl =
+    typeof profileUrlRaw === "string" && profileUrlRaw.trim() !== ""
+      ? profileUrlRaw.trim()
+      : null;
   return {
     id: (raw.id as number) ?? (raw.documentId as string) ?? 0,
     order: order ?? undefined,
     name,
     slug: (raw.slug as string) ?? (attrs?.slug as string),
+    profileUrl,
     title,
     photo,
     bio,
@@ -327,7 +335,7 @@ export const getExpertBySlug = async (slug: string) => {
     );
     const data = response.data?.data;
     if (Array.isArray(data) && data.length > 0) {
-      return data[0];
+      return normalizeExpertBio(data[0] as Record<string, unknown>);
     }
     // Fallback: fetch expert-net and find by slug derived from name (for when slug isn't set in Strapi yet)
     const expertNet = await getExpertNet();
