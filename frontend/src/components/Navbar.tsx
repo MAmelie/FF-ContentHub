@@ -141,6 +141,7 @@ const Navbar = () => {
   const isForYouActive = pathname === "/home";
   const isExpertNetActive = pathname === "/expert-net" || pathname.startsWith("/expert-net/");
   const isAboutActive = pathname === "/about";
+  const isOnboardingActive = pathname === "/onboarding";
   const userDisplayName = user ? getDisplayName(user) : "";
   const userInitials = userDisplayName ? getInitials(userDisplayName) : "";
 
@@ -240,14 +241,15 @@ const Navbar = () => {
             >
               For You
             </Link>
-            <a
-              href="https://onboarding.feedforward.ai/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-md px-3 py-2 text-sm font-plex text-brand-blue hover:bg-peach/30"
+            <Link
+              href="/onboarding"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block rounded-md px-3 py-2 text-sm font-plex ${
+                isOnboardingActive ? "text-brand-orange bg-peach/30" : "text-brand-blue hover:bg-peach/30"
+              }`}
             >
               Onboarding
-            </a>
+            </Link>
             <button
               type="button"
               onClick={() => setMobileContentOpen((v) => !v)}
@@ -365,15 +367,18 @@ const Navbar = () => {
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
               )}
             </Link>
-            <a
-              href="https://onboarding.feedforward.ai/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/onboarding"
               onClick={() => setUserMenuOpen(false)}
-              className="relative inline-flex items-center text-sm lg:text-base font-plex text-white hover:text-brand-orange transition-colors duration-200 pb-0.5"
+              className={`relative inline-flex items-center text-sm lg:text-base font-plex transition-colors duration-200 pb-0.5 ${
+                isOnboardingActive ? "text-brand-orange" : "text-white hover:text-brand-orange"
+              }`}
             >
               Onboarding
-            </a>
+              {isOnboardingActive && (
+                <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-orange" />
+              )}
+            </Link>
 
             <div className="relative">
               <button
