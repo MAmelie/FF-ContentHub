@@ -48,6 +48,9 @@ const EXPERT_NET_FAQ: { category: string; q: string; a: string }[] = [
 
 type FaqItem = { q: string; a: string };
 
+/** FAQ category shown inline (no accordion) on the Expert Net page. */
+const FAQ_ALWAYS_VISIBLE_CATEGORY = "Overview";
+
 const FAQ_CONTACT_EMAILS: Record<string, string> = {
   Maddie: "maddie@feedforward.ai",
   Gina: "gina@feedforward.ai",
@@ -423,6 +426,49 @@ const ExpertNetPage = () => {
               const headingId = `${baseId}-heading`;
               const panelId = `${baseId}-panel`;
               const expanded = openFaqCategories.has(category);
+              const alwaysVisible = category === FAQ_ALWAYS_VISIBLE_CATEGORY;
+
+              const qaList = (
+                <div className="space-y-5">
+                  {items.map((item, idx) => (
+                    <div key={`${category}-${idx}`}>
+                      <h3 className="text-sm font-medium text-brand-blue font-plex leading-snug">
+                        {item.q}
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-subtitle font-plex">
+                        {renderFaqAnswer(item.a)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              );
+
+              if (alwaysVisible) {
+                return (
+                  <div
+                    key={category}
+                    className="rounded-xl border border-card bg-white shadow-sm overflow-hidden"
+                  >
+                    <div className="border-b border-card px-5 py-4">
+                      <span
+                        id={headingId}
+                        className="text-base font-semibold text-brand-blue font-plex"
+                      >
+                        {category}
+                      </span>
+                    </div>
+                    <div
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={headingId}
+                      className="bg-gray-50/50 px-5 py-5"
+                    >
+                      {qaList}
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={category}
@@ -454,18 +500,7 @@ const ExpertNetPage = () => {
                       aria-labelledby={headingId}
                       className="border-t border-card bg-gray-50/50 px-5 py-5"
                     >
-                      <div className="space-y-5">
-                        {items.map((item, idx) => (
-                          <div key={`${category}-${idx}`}>
-                            <h3 className="text-sm font-medium text-brand-blue font-plex leading-snug">
-                              {item.q}
-                            </h3>
-                            <p className="mt-2 text-sm leading-relaxed text-subtitle font-plex">
-                              {renderFaqAnswer(item.a)}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                      {qaList}
                     </div>
                   ) : null}
                 </div>
