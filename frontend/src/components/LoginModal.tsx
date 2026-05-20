@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { FaTimes } from "react-icons/fa";
 import { loginWithTestUser } from "../../lib/auth";
+import { setStoredPostLoginReturn } from "../../lib/return-path";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
 const isDev = process.env.NODE_ENV === "development";
@@ -37,6 +38,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     if (!BACKEND_URL) {
       alert("Backend URL not configured. Set NEXT_PUBLIC_STRAPI_URL for Discord login.");
       return;
+    }
+    if (typeof window !== "undefined") {
+      const path = `${window.location.pathname}${window.location.search}`;
+      setStoredPostLoginReturn(path);
     }
     window.location.href = `${BACKEND_URL}/api/connect/discord`;
   };

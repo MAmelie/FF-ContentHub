@@ -4,6 +4,10 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { setAuthData } from '../../../../../lib/auth';
 import type { User } from '../../../../../lib/auth';
+import {
+  clearStoredPostLoginReturn,
+  takeStoredPostLoginReturn,
+} from '../../../../../lib/return-path';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
 /** Canonical app URL (e.g. https://memberportal.feedforward.ai). If set, we redirect here after login so the URL bar always shows the desired domain. */
@@ -72,8 +76,7 @@ function DiscordRedirectContent() {
         
         setText('You have been successfully logged in. You will be redirected in a few seconds...');
         
-        // Redirect to personalized home after 3 seconds; use canonical URL so the bar shows the desired domain (e.g. memberportal.feedforward.ai)
-        const redirectPath = '/home';
+        const redirectPath = takeStoredPostLoginReturn();
         setTimeout(() => {
           if (CANONICAL_APP_URL && typeof window !== 'undefined' && window.location.origin !== new URL(CANONICAL_APP_URL).origin) {
             window.location.href = `${CANONICAL_APP_URL}${redirectPath}`;
@@ -83,6 +86,7 @@ function DiscordRedirectContent() {
         }, 3000);
 
       } catch (error) {
+        clearStoredPostLoginReturn();
         console.error('Authentication error:', error);
         setAuthFailed(true);
         const message = error instanceof Error ? error.message : 'An error occurred during authentication. Please try again.';

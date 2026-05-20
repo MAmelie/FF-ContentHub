@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getLogo } from "../../../lib/api";
 import { Logo } from "../../../lib/types";
 import { isAuthenticated, getUser, getDisplayName } from "../../../lib/auth";
+import { sanitizeReturnPath } from "../../../lib/return-path";
 import Loader from "@/components/Loader";
 
 /**
@@ -88,8 +89,10 @@ const PREVIOUS_ITEMS: RecommendationItem[] = [
 
 const FALLBACK_LOGO = "/logo.png";
 
-export default function HomePage() {
+function HomePageInner() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [authChecked, setAuthChecked] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [logo, setLogo] = useState<Logo | null>(null);
@@ -97,7 +100,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      router.push("/auth/login");
+      const raw = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+      const next = sanitizeReturnPath(raw);
+      router.push(next ? `/auth/login?next=${encodeURIComponent(next)}` : "/auth/login");
       return;
     }
     setAuthChecked(true);
@@ -117,7 +122,7 @@ export default function HomePage() {
     //   }
     // };
     // fetchLogo();
-  }, [router]);
+  }, [router, pathname, searchParams]);
 
   const handleRecommendationClick = (_item: RecommendationItem) => {
     // Placeholder: items are interactive but routing is disabled for now.
@@ -303,5 +308,19 @@ export default function HomePage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader />
+        </div>
+      }
+    >
+      <HomePageInner />
+    </Suspense>
   );
 }

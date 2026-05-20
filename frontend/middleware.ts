@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { sanitizeReturnPath } from './lib/return-path';
 
 const AUTH_COOKIE_NAME = 'ff_auth';
 
@@ -49,6 +50,12 @@ export function middleware(request: NextRequest) {
 
   if (!isBypassEnabled && !isLocalhost && !hasAuthCookie) {
     const loginUrl = new URL('/auth/login', request.url);
+    const returnTarget = sanitizeReturnPath(
+      `${request.nextUrl.pathname}${request.nextUrl.search}`
+    );
+    if (returnTarget) {
+      loginUrl.searchParams.set('next', returnTarget);
+    }
     const redirectResponse = NextResponse.redirect(loginUrl);
     Object.entries(responseHeaders).forEach(([key, value]) => {
       redirectResponse.headers.set(key, value);

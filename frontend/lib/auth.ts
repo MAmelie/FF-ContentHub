@@ -1,5 +1,6 @@
 // lib/auth.ts
 import type { AppUser } from "./types";
+import { clearStoredPostLoginReturn } from "./return-path";
 
 export interface User {
   id: number;
@@ -96,6 +97,7 @@ export const logout = (): void => {
   localStorage.removeItem('jwt');
   localStorage.removeItem('user');
   document.cookie = `${AUTH_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
+  clearStoredPostLoginReturn();
   window.location.href = '/auth/login';
 };
 

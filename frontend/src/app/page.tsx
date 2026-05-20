@@ -2,10 +2,11 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { Suspense, useEffect, useState, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getAllTiles, getHomepageHero } from "../../lib/api";
 import { Tile, HomepageHero } from "@/../lib/types";
 import { isAuthenticated, getUser, getDisplayName } from "../../lib/auth";
+import { sanitizeReturnPath } from "../../lib/return-path";
 import Loader from "@/components/Loader";
 
 const CONTENT_TILE_ORDER = ["Meeting readouts", "Podcasts", "Additional content"];
@@ -20,12 +21,15 @@ function HomeContent() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
 
   const searchQuery = searchParams.get("search") ?? "";
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      router.push('/auth/login');
+      const raw = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+      const next = sanitizeReturnPath(raw);
+      router.push(next ? `/auth/login?next=${encodeURIComponent(next)}` : "/auth/login");
       return;
     }
     setAuthChecked(true);
@@ -35,7 +39,7 @@ function HomeContent() {
       const firstName = displayName.split(/\s+/).filter(Boolean)[0] ?? "";
       setUserName(firstName || null);
     }
-  }, [router]);
+  }, [router, pathname, searchParams]);
 
   useEffect(() => {
     if (!authChecked) return;
