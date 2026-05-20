@@ -1,92 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getDisplayName, getUser } from "../../../lib/auth";
 
 const STEP_KEYS = ["1", "2", "3", "4", "5"] as const;
 const STORAGE_PREFIX = "feedforward-step-";
 
-const FAQ_ITEMS: { id: string; question: string; answer: ReactNode }[] = [
-  {
-    id: "discord-access",
-    question: "How do I access Discord?",
-    answer: (
-      <p>
-        Use this{" "}
-        <a href="https://discord.gg/X57TPEErKf" target="_blank" rel="noopener noreferrer">
-          invite
-        </a>{" "}
-        to access the Feedforward Discord.
-      </p>
-    ),
-  },
-  {
-    id: "expert-sessions",
-    question: "How do I use and book expert sessions?",
-    answer: (
-      <p>
-        Reach out to{" "}
-        <a href="mailto:maddie@feedforward.ai">Maddie</a> to book a session. Sessions are virtual and run 45-60
-        minutes. (Gentle reminder - these are not speaking engagements. They are consultation/advisory sessions)
-        Learn more about our Expert Network and how to book these sessions via the updated member portal (coming
-        soon).
-      </p>
-    ),
-  },
-  {
-    id: "member-selection",
-    question: "How are Feedforward members selected?",
-    answer: (
-      <p>
-        We curate for quality - senior leaders and practitioners actively working on AI who can both contribute and
-        benefit. If you want to refer a business leader and their company to join, please reach out to FF co-founder,{" "}
-        <a href="mailto:jessica@feedforward.ai">Jessica Johnston</a>.
-      </p>
-    ),
-  },
-  {
-    id: "connect-members",
-    question: "Can I connect with specific members?",
-    answer: <p>Yes, of course! Reach out via Discord or request an introduction from our team.</p>,
-  },
-  {
-    id: "rotation",
-    question: "What's the rotation policy?",
-    answer: (
-      <p>
-        Membership renews annually, and is invite-only. We rotate periodically to keep participation active. Engaged
-        members in good standing are typically invited to renew.
-      </p>
-    ),
-  },
-  {
-    id: "additional-services",
-    question: "Are additional services available?",
-    answer: (
-      <p>
-        Yes: extra advisory credits, team workshops, and strategic consulting, and Foundry.{" "}
-        <a href="mailto:maddie@feedforward.ai">Contact us</a> to learn more.
-      </p>
-    ),
-  },
-  {
-    id: "guest",
-    question: "Can I bring a guest?",
-    answer: (
-      <p>
-        Handled case-by-case. Reach out in advance—we aim to maintain our intimate, trusted environment for the
-        Feedforward community.
-      </p>
-    ),
-  },
-];
+import OnboardingFaq from "./OnboardingFaq";
 
 export default function OnboardingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
   const [welcomeText, setWelcomeText] = useState("Welcome to Feedforward!");
-  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
   const [checkedSteps, setCheckedSteps] = useState<Record<string, boolean>>({});
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const nameFromUrl = params.get("name")?.trim();
@@ -133,10 +58,6 @@ export default function OnboardingPage() {
   const onStepChange = useCallback((step: string, checked: boolean) => {
     localStorage.setItem(`${STORAGE_PREFIX}${step}`, String(checked));
     setCheckedSteps((prev) => ({ ...prev, [step]: checked }));
-  }, []);
-
-  const toggleFaq = useCallback((id: string) => {
-    setOpenFaqId((prev) => (prev === id ? null : id));
   }, []);
 
   useEffect(() => {
@@ -361,7 +282,7 @@ export default function OnboardingPage() {
             ].map(({ step, title, body }) => (
               <div
                 key={step}
-                className={`timeline-item fade-in${checkedSteps[step] ? " completed" : ""}`}
+                className={`timeline-item${checkedSteps[step] ? " completed" : ""}`}
               >
                 <div className="timeline-number">{step}</div>
                 <div className="timeline-content">
@@ -427,25 +348,11 @@ export default function OnboardingPage() {
 
       <section className="faq" id="faq">
         <div className="section-container">
-          <div className="section-header fade-in">
+          <div className="section-header">
             <h2>Frequently Asked Questions</h2>
             <p>Quick answers to common questions about your membership.</p>
           </div>
-          <div className="faq-list">
-            {FAQ_ITEMS.map((item) => (
-              <div key={item.id} className={`faq-item fade-in${openFaqId === item.id ? " is-active" : ""}`}>
-                <button type="button" className="faq-question" onClick={() => toggleFaq(item.id)} aria-expanded={openFaqId === item.id}>
-                  <h3>{item.question}</h3>
-                  <svg className="faq-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-                  </svg>
-                </button>
-                <div className="faq-answer">
-                  <div className="faq-answer-inner">{item.answer}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <OnboardingFaq />
         </div>
       </section>
     </div>
