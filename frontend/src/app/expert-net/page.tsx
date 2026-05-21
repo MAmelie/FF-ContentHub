@@ -10,6 +10,131 @@ import BackToHome from "../../components/BackToHome";
 import ExpertMatchChat from "../../components/ExpertMatchChat";
 import { EXPERT_SESSION_CALENDLY_URL } from "@/lib/expertSessionCalendly";
 import { FaUser, FaArrowRight, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+/** Shown when Expert-Net title is empty in Strapi. */
+const EXPERT_NET_FALLBACK_TITLE = "Expert Advisory Network";
+
+/** Shown when Expert-Net description is empty in Strapi (markdown, same as Strapi editor). */
+const EXPERT_NET_FALLBACK_DESCRIPTION = `Feedforward expert sessions are company-specific advisory conversations with members of our expert network, conducted virtually throughout the year. They are not speaking engagements.
+
+Use this page to browse our experts' backgrounds and book a session directly. Not sure who to book with? [Ask our AI guide for a recommendation](#expert-ai-guide) based on your goals.
+
+For more on expert sessions and how credits work, see the [FAQs](#faq) below. For speaking engagements, [contact us](mailto:maddie@feedforward.ai).`;
+
+const EXPERT_NET_INTRO_CLASS = "mt-3 max-w-none";
+
+const EXPERT_NET_INTRO_HTML_CLASS =
+  "mt-3 max-w-none space-y-2 text-base leading-relaxed text-subtitle font-plex [text-wrap:pretty] [&_p+_p]:mt-2 [&_a]:font-medium [&_a]:text-subtitle [&_a]:underline [&_a]:decoration-brand-orange/60 [&_a]:underline-offset-2 hover:[&_a]:text-brand-orange focus:[&_a]:outline-none focus-visible:[&_a]:ring-2 focus-visible:[&_a]:ring-brand-orange/35 focus-visible:[&_a]:ring-offset-2 [&_a]:rounded-sm";
+
+const EXPERT_NET_INTRO_LINK_CLASS =
+  "font-medium text-subtitle underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm";
+
+function isLikelyHtml(content: string): boolean {
+  return /<\s*(p|a|div|br|h[1-6]|ul|ol|li|strong|em)\b/i.test(content);
+}
+
+/** Maps intro link hrefs from Strapi (anchor or full URL) to in-page actions. */
+function expertNetIntroLinkAction(
+  href: string | null
+): "ai-guide" | "faq" | null {
+  if (!href) return null;
+  const trimmed = href.trim();
+  if (trimmed === "#expert-ai-guide" || trimmed.endsWith("#expert-ai-guide")) {
+    return "ai-guide";
+  }
+  if (trimmed === "#faq" || trimmed.endsWith("#faq")) {
+    return "faq";
+  }
+  return null;
+}
+
+function ExpertNetIntro({
+  content,
+  onOpenAiGuide,
+  onScrollToFaq,
+}: {
+  content: string;
+  onOpenAiGuide: () => void;
+  onScrollToFaq: () => void;
+}) {
+  const handleHtmlClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const anchor = (e.target as HTMLElement).closest("a[href]");
+    if (!anchor || !e.currentTarget.contains(anchor)) return;
+    const action = expertNetIntroLinkAction(anchor.getAttribute("href"));
+    if (action === "ai-guide") {
+      e.preventDefault();
+      onOpenAiGuide();
+    } else if (action === "faq") {
+      e.preventDefault();
+      onScrollToFaq();
+    }
+  };
+
+  if (isLikelyHtml(content)) {
+    return (
+      <div
+        className={EXPERT_NET_INTRO_HTML_CLASS}
+        dangerouslySetInnerHTML={{ __html: content }}
+        onClick={handleHtmlClick}
+      />
+    );
+  }
+
+  return (
+    <div className={EXPERT_NET_INTRO_CLASS}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => (
+            <p className="text-base leading-relaxed text-subtitle font-plex [text-wrap:pretty] [&:not(:first-child)]:mt-2">
+              {children}
+            </p>
+          ),
+          a: ({ href, children }) => {
+            const action = expertNetIntroLinkAction(href ?? null);
+            if (action === "ai-guide") {
+              return (
+                <a
+                  href={href}
+                  className={EXPERT_NET_INTRO_LINK_CLASS}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onOpenAiGuide();
+                  }}
+                >
+                  {children}
+                </a>
+              );
+            }
+            if (action === "faq") {
+              return (
+                <a
+                  href={href}
+                  className={EXPERT_NET_INTRO_LINK_CLASS}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onScrollToFaq();
+                  }}
+                >
+                  {children}
+                </a>
+              );
+            }
+            return (
+              <a href={href} className={EXPERT_NET_INTRO_LINK_CLASS}>
+                {children}
+              </a>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
 
 const EXPERT_NET_FAQ: { category: string; q: string; a: string }[] = [
   // Overview
@@ -130,16 +255,32 @@ const ExpertNetPage = () => {
     });
   }, []);
 
-  const scrollToFaq = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  const scrollToFaqSection = useCallback(() => {
     document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const openAiGuide = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  const openAiGuideSection = useCallback(() => {
     setIsAiGuideOpen(true);
-    document.getElementById("expert-ai-guide")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    document
+      .getElementById("expert-ai-guide")
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, []);
+
+  const scrollToFaq = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      scrollToFaqSection();
+    },
+    [scrollToFaqSection]
+  );
+
+  const openAiGuide = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      openAiGuideSection();
+    },
+    [openAiGuideSection]
+  );
 
   useEffect(() => {
     const fetchExpertNet = async () => {
@@ -234,6 +375,9 @@ const ExpertNetPage = () => {
     );
 
   const bios = expertNet.expert_bios ?? [];
+  const pageTitle = expertNet.title?.trim() || EXPERT_NET_FALLBACK_TITLE;
+  const introContent =
+    expertNet.description?.trim() || EXPERT_NET_FALLBACK_DESCRIPTION;
 
   return (
     <>
@@ -254,42 +398,13 @@ const ExpertNetPage = () => {
           <BackToHome label="Member Portal" />
           <div className="mt-4 rounded-2xl border border-card bg-white p-6 shadow-sm md:p-8">
             <h1 className="text-2xl md:text-3xl font-semibold text-brand-blue font-didot">
-              Expert Advisory Network
+              {pageTitle}
             </h1>
-            <div className="mt-3 max-w-none space-y-2 text-base leading-relaxed text-subtitle font-plex [text-wrap:pretty]">
-              <p>
-                Feedforward expert sessions are company-specific advisory conversations with members of our expert network, conducted virtually throughout the year. They are not speaking engagements.
-              </p>
-              <p>
-                Use this page to browse our experts&apos; backgrounds and book a session directly. Not sure who to book with?{" "}
-                <a
-                  href="#expert-ai-guide"
-                  onClick={openAiGuide}
-                  className="font-medium text-subtitle underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
-                >
-                  Ask our AI guide for a recommendation
-                </a>{" "}
-                based on your goals.
-              </p>
-              <p>
-                For more on expert sessions and how credits work, see the{" "}
-                <a
-                  href="#faq"
-                  onClick={scrollToFaq}
-                  className="font-medium text-subtitle underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
-                >
-                  FAQs
-                </a>{" "}
-                below. For speaking engagements,{" "}
-                <a
-                  href="mailto:maddie@feedforward.ai"
-                  className="font-medium text-subtitle underline decoration-brand-orange/60 underline-offset-2 hover:text-brand-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/35 focus-visible:ring-offset-2 rounded-sm"
-                >
-                  contact us
-                </a>
-                .
-              </p>
-            </div>
+            <ExpertNetIntro
+              content={introContent}
+              onOpenAiGuide={openAiGuideSection}
+              onScrollToFaq={scrollToFaqSection}
+            />
             <div id="expert-ai-guide">
               <ExpertMatchChat
                 experts={bios}
