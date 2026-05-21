@@ -182,6 +182,14 @@ function TeamMemberCompactCard({
   );
 }
 
+const ABOUT_FALLBACK_TITLE = "Feed Forward";
+
+/** Shown when About Page intro is empty in Strapi (HTML). */
+const ABOUT_FALLBACK_INTRO = [
+  "<p>Feedforward is a private, peer-to-peer community for senior leaders and practitioners actively building the future of AI.</p>",
+  "<p>It&apos;s a high-signal space designed for sharing real-world lessons, solving complex problems, and getting direct answers from those on the same journey.</p>",
+].join("");
+
 const GROUP_ORDER: TeamGroup[] = ["founding", "core", "advisory", "operations"];
 const CORE_TEAM_ROW_ONE_ORDER = ["maddie", "michelle", "lennart", "gina"];
 const CORE_TEAM_ROW_TWO_ORDER = ["jenny", "erica"];
@@ -250,6 +258,9 @@ const AboutPageRoute = () => {
     );
   }
 
+  const pageTitle = about.title?.trim() || ABOUT_FALLBACK_TITLE;
+  const introHtml = about.intro?.trim() || ABOUT_FALLBACK_INTRO;
+
   return (
     <div className="min-h-screen">
       <section className="max-w-6xl mx-auto px-6 pt-4 sm:pt-6 pb-3 card-animate-in">
@@ -259,23 +270,17 @@ const AboutPageRoute = () => {
         >
           <div className="min-w-0">
             <h1 className="text-2xl md:text-3xl font-semibold text-brand-blue font-didot">
-              Feed Forward
+              {pageTitle}
             </h1>
-            <p className="mt-3 max-w-5xl text-base md:text-base lg:text-lg text-brand-blue font-plex leading-relaxed">
-              <span className="block">Feedforward is a private, peer-to-peer community for senior leaders and practitioners actively building the future of AI.</span>
-              <span className="block">It&apos;s a high-signal space designed for sharing real-world lessons, solving complex problems, and getting direct answers from those on the same journey.</span>
-            </p>
-            {about.subtitle && (
-              <p className="mt-2 text-base md:text-lg text-subtitle font-plex">
-                {about.subtitle}
+            {about.subtitle?.trim() ? (
+              <p className="mt-3 text-base md:text-lg text-brand-blue font-plex leading-relaxed">
+                {about.subtitle.trim()}
               </p>
-            )}
-            {about.intro && (
-              <div
-                className="mt-4 text-base text-subtitle font-plex leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: about.intro }}
-              />
-            )}
+            ) : null}
+            <div
+              className="mt-3 max-w-5xl text-base md:text-base lg:text-lg text-subtitle font-plex leading-relaxed [&_p+_p]:mt-3"
+              dangerouslySetInnerHTML={{ __html: introHtml }}
+            />
           </div>
 
           {about.hero_image?.url ? (
