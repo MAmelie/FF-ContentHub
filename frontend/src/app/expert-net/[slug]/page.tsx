@@ -11,7 +11,7 @@ import {
 } from "../../../../lib/expertAdvisoryTopics";
 import Loader from "@/components/Loader";
 import BackToHome from "@/components/BackToHome";
-import CalendlyBadge from "@/components/CalendlyBadge";
+import BookExpertSessionCta from "@/components/BookExpertSessionCta";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FaUser, FaArrowLeft } from "react-icons/fa";
@@ -176,7 +176,6 @@ export default function ExpertProfilePage({
 
   return (
     <div className="min-h-screen">
-      <CalendlyBadge />
       <div className="max-w-4xl mx-auto px-6 pt-6">
         <BackToHome label="Expert Network" href="/expert-net" />
       </div>
@@ -201,28 +200,29 @@ export default function ExpertProfilePage({
 
             {/* Right – Header + Bio */}
             <div className="flex-1 p-8 md:p-10">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-brand-blue font-didot leading-snug">
-                    {expert.profileUrl ? (
-                      <a
-                        href={expert.profileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-inherit hover:text-brand-orange transition-colors underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/40 focus-visible:ring-offset-2 rounded-sm"
-                      >
-                        {expert.name}
-                      </a>
-                    ) : (
-                      expert.name
-                    )}
-                  </h1>
-                  <p className="mt-2 text-sm font-medium text-brand-orange font-plex">
-                    {expert.title}
-                  </p>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-brand-blue font-didot leading-snug">
+                  {expert.profileUrl ? (
+                    <a
+                      href={expert.profileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-inherit hover:text-brand-orange transition-colors underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/40 focus-visible:ring-offset-2 rounded-sm"
+                    >
+                      {expert.name}
+                    </a>
+                  ) : (
+                    expert.name
+                  )}
+                </h1>
+                <p className="mt-2 text-sm font-medium text-brand-orange font-plex">
+                  {expert.title}
+                </p>
+                <div className="mt-4 flex flex-col items-start">
+                  <BookExpertSessionCta size="compact" />
                 </div>
+                <div className="mt-3 h-px w-12 bg-brand-orange/40" />
               </div>
-              <div className="mt-3 h-px w-12 bg-brand-orange/40" />
 
               <div className="mt-6 prose prose-sm max-w-none text-gray-700 font-plex">
                 <ReactMarkdown

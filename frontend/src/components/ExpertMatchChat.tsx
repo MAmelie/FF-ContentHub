@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ExpertBio } from "@/../lib/types";
 import { expertAdvisoryTopicsByName } from "@/../lib/expertAdvisoryTopics";
-import { FaPaperPlane, FaUser, FaCalendarCheck } from "react-icons/fa";
+import { FaPaperPlane, FaUser } from "react-icons/fa";
+import BookExpertSessionCta from "@/components/BookExpertSessionCta";
 
 /** Common English stopwords + chat fillers so short queries keep signal. */
 const STOPWORDS = new Set(
@@ -229,15 +230,7 @@ export default function ExpertMatchChat({
   if (experts.length === 0) {
     const emptyInner = bookSessionHref ? (
       <div className="flex max-w-xl flex-col gap-2">
-        <a
-          href={bookSessionHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="expert-book-cta inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-center text-base font-medium font-plex tracking-tight focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-1 sm:w-auto sm:self-start"
-        >
-          <FaCalendarCheck size={14} className="shrink-0 opacity-95" />
-          Book an Expert Session
-        </a>
+        <BookExpertSessionCta />
         <p className="text-sm leading-relaxed text-subtitle font-plex">
           Expert profiles aren&apos;t listed here right now. You can still book using the button above. For help choosing someone or special requests, contact Maddie or Gina, or scroll to the FAQ below.
         </p>
@@ -261,17 +254,7 @@ export default function ExpertMatchChat({
   const matchBody = (
     <>
       <div className="flex max-w-xl flex-col gap-4">
-        {bookSessionHref ? (
-          <a
-            href={bookSessionHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="expert-book-cta inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-center text-base font-medium font-plex tracking-tight focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-1 sm:w-auto sm:self-start"
-          >
-            <FaCalendarCheck size={14} className="shrink-0 opacity-95" />
-            Book an Expert Session
-          </a>
-        ) : null}
+        {bookSessionHref ? <BookExpertSessionCta /> : null}
       </div>
 
       {isOpen && (
