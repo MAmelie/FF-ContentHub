@@ -7,7 +7,20 @@ const HOMEPAGE_HERO_UID = 'api::homepage-hero.homepage-hero';
 const HOMEPAGE_HERO_TITLE = 'Member Portal Home';
 const LOGO_UID = 'api::logo.logo';
 const LOGO_TITLE = 'Logo';
+const PODCASTS_PAGE_UID = 'api::podcasts-page.podcasts-page';
+const ADDITIONAL_CONTENT_PAGE_UID = 'api::additional-content-page.additional-content-page';
 const WRONG_CM_CONFIG_KEY = `plugin_content-manager_configuration_content_types::${HOMEPAGE_HERO_UID}`;
+
+const PODCASTS_PAGE_DEFAULTS = {
+  title: 'Podcasts',
+  intro:
+    'Dive into Feedforward conversations, interviews and explainers. Expand an episode for show notes.',
+};
+
+const ADDITIONAL_CONTENT_PAGE_DEFAULTS = {
+  title: 'Additional content',
+  intro: 'Browse supplementary resources, guides, and downloads from Feedforward.',
+};
 
 type ExpertNetFaqSeed = {
   faq_heading?: string;
@@ -162,6 +175,47 @@ async function ensureSingleTypeTitle(
   strapi.log.info(`${label}: set title to "${title}".`);
 }
 
+async function ensureSingleTypePageCopy(
+  strapi: {
+    log: { info: (msg: string) => void; warn: (msg: string) => void };
+    documents: (uid: string) => {
+      findFirst: (params?: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
+      create: (params: Record<string, unknown>) => Promise<unknown>;
+      update: (params: Record<string, unknown>) => Promise<unknown>;
+    };
+  },
+  uid: string,
+  defaults: { title: string; intro: string },
+  label: string
+) {
+  const published = await strapi.documents(uid).findFirst({ status: 'published' });
+  const draft = await strapi.documents(uid).findFirst({ status: 'draft' });
+  let doc = published ?? draft;
+
+  if (!doc?.documentId) {
+    await strapi.documents(uid).create({
+      data: { title: defaults.title, intro: defaults.intro },
+      status: 'published',
+    });
+    strapi.log.info(`${label}: created with default title and intro.`);
+    return;
+  }
+
+  const existingTitle = typeof doc.title === 'string' ? doc.title.trim() : '';
+  const existingIntro = typeof doc.intro === 'string' ? doc.intro.trim() : '';
+  if (existingTitle && existingIntro) return;
+
+  await strapi.documents(uid).update({
+    documentId: doc.documentId,
+    data: {
+      title: existingTitle || defaults.title,
+      intro: existingIntro || defaults.intro,
+    },
+    status: published ? 'published' : 'draft',
+  });
+  strapi.log.info(`${label}: filled missing title/intro from defaults.`);
+}
+
 export default {
   /**
    * An asynchronous register function that runs before
@@ -252,6 +306,15 @@ export default {
       await fixContentManagerEntryTitle(strapi, LOGO_UID, 'title');
       await ensureSingleTypeTitle(strapi, HOMEPAGE_HERO_UID, HOMEPAGE_HERO_TITLE, 'Member Portal Home');
       await ensureSingleTypeTitle(strapi, LOGO_UID, LOGO_TITLE, 'Logo');
+      await fixContentManagerEntryTitle(strapi, PODCASTS_PAGE_UID, 'title');
+      await fixContentManagerEntryTitle(strapi, ADDITIONAL_CONTENT_PAGE_UID, 'title');
+      await ensureSingleTypePageCopy(strapi, PODCASTS_PAGE_UID, PODCASTS_PAGE_DEFAULTS, 'Podcasts Page');
+      await ensureSingleTypePageCopy(
+        strapi,
+        ADDITIONAL_CONTENT_PAGE_UID,
+        ADDITIONAL_CONTENT_PAGE_DEFAULTS,
+        'Additional Content Page'
+      );
     } catch (err) {
       strapi.log.warn(
         `Single-type admin title setup failed: ${err instanceof Error ? err.message : String(err)}`

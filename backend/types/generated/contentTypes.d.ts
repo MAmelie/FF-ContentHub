@@ -466,6 +466,37 @@ export interface ApiAboutPageAboutPage extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiAdditionalContentPageAdditionalContentPage
+  extends Struct.SingleTypeSchema {
+  collectionName: 'additional_content_pages';
+  info: {
+    displayName: 'Additional Content Page';
+    pluralName: 'additional-content-pages';
+    singularName: 'additional-content-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    intro: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::additional-content-page.additional-content-page'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Additional content'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAppointmentAppointment extends Struct.CollectionTypeSchema {
   collectionName: 'appointments';
   info: {
@@ -691,7 +722,7 @@ export interface ApiFavouriteFavourite extends Struct.CollectionTypeSchema {
 export interface ApiHomepageHeroHomepageHero extends Struct.SingleTypeSchema {
   collectionName: 'homepage_heroes';
   info: {
-    displayName: 'Homepage-Hero';
+    displayName: 'Member Portal Home';
     pluralName: 'homepage-heroes';
     singularName: 'homepage-hero';
   };
@@ -699,18 +730,27 @@ export interface ApiHomepageHeroHomepageHero extends Struct.SingleTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    content_section_blurb: Schema.Attribute.Text;
+    content_section_title: Schema.Attribute.String;
     cover: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
+    experts_section_blurb: Schema.Attribute.Text;
+    experts_section_title: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::homepage-hero.homepage-hero'
     > &
       Schema.Attribute.Private;
+    portal_intro: Schema.Attribute.Text;
     publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Member Portal Home'>;
+    tools_section_blurb: Schema.Attribute.Text;
+    tools_section_title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -773,6 +813,36 @@ export interface ApiLogoLogo extends Struct.SingleTypeSchema {
       true
     >;
     publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Logo'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPodcastsPagePodcastsPage extends Struct.SingleTypeSchema {
+  collectionName: 'podcasts_pages';
+  info: {
+    displayName: 'Podcasts Page';
+    pluralName: 'podcasts-pages';
+    singularName: 'podcasts-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    intro: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::podcasts-page.podcasts-page'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Podcasts'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1411,6 +1481,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::about-page.about-page': ApiAboutPageAboutPage;
+      'api::additional-content-page.additional-content-page': ApiAdditionalContentPageAdditionalContentPage;
       'api::appointment.appointment': ApiAppointmentAppointment;
       'api::doc.doc': ApiDocDoc;
       'api::document.document': ApiDocumentDocument;
@@ -1420,6 +1491,7 @@ declare module '@strapi/strapi' {
       'api::homepage-hero.homepage-hero': ApiHomepageHeroHomepageHero;
       'api::list-item.list-item': ApiListItemListItem;
       'api::logo.logo': ApiLogoLogo;
+      'api::podcasts-page.podcasts-page': ApiPodcastsPagePodcastsPage;
       'api::recommendation.recommendation': ApiRecommendationRecommendation;
       'api::team-member.team-member': ApiTeamMemberTeamMember;
       'api::tile.tile': ApiTileTile;

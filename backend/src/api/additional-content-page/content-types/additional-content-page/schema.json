@@ -1,0 +1,22 @@
+{
+  "kind": "singleType",
+  "collectionName": "additional_content_pages",
+  "info": {
+    "singularName": "additional-content-page",
+    "pluralName": "additional-content-pages",
+    "displayName": "Additional Content Page"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Additional content"
+    },
+    "intro": {
+      "type": "text"
+    }
+  }
+}
