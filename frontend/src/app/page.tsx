@@ -11,6 +11,27 @@ import Loader from "@/components/Loader";
 
 const CONTENT_TILE_ORDER = ["Meeting readouts", "Podcasts", "Additional content"];
 
+const PORTAL_HOME_FALLBACK = {
+  portal_intro: "Here is your Feedforward content portal. Feel free to share.",
+  content_section_title: "Content Hub",
+  content_section_blurb:
+    "Meeting readouts, podcasts, and additional content to support your work.",
+  tools_section_title: "Tools",
+  tools_section_blurb:
+    "Internal utilities and helpers to navigate and use your Feedforward content faster.",
+  experts_section_title: "Experts",
+  experts_section_blurb: "Connect with experts and access the expert network.",
+} as const;
+
+function portalHomeText(
+  hero: HomepageHero | null,
+  key: keyof typeof PORTAL_HOME_FALLBACK
+): string {
+  const value = hero?.[key];
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  return trimmed || PORTAL_HOME_FALLBACK[key];
+}
+
 function HomeContent() {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [hero, setHero] = useState<HomepageHero | null>(null);
@@ -157,7 +178,7 @@ function HomeContent() {
                     {userName ? `Welcome back, ${userName}!` : "Welcome to Feedforward!"}
                   </h1>
                   <p className="text-base sm:text-lg md:text-xl text-subtitle leading-relaxed max-w-xl font-plex mb-2 sm:mb-3">
-                    Here is your Feedforward content portal. Feel free to share.
+                    {portalHomeText(hero, "portal_intro")}
                   </p>
                   {hero?.description && !/lorem\s+ipsum/i.test(hero.description.trim()) && (
                     <p className="text-sm sm:text-base md:text-lg text-subtitle leading-relaxed max-w-xl font-plex mb-4 sm:mb-6">
@@ -178,10 +199,10 @@ function HomeContent() {
                   <header className="mb-5 sm:mb-6">
                     <h2 className="flex items-center gap-3 text-xl sm:text-2xl font-bold mb-2 font-didot text-brand-blue">
                       <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
-                      Content Hub
+                      {portalHomeText(hero, "content_section_title")}
                     </h2>
                     <p className="text-xs sm:text-sm text-subtitle font-plex">
-                      Meeting readouts, podcasts, and additional content to support your work.
+                      {portalHomeText(hero, "content_section_blurb")}
                     </p>
                   </header>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
@@ -199,10 +220,10 @@ function HomeContent() {
                   <header className="mb-5 sm:mb-6">
                     <h2 className="flex items-center gap-3 text-xl sm:text-2xl font-bold mb-2 font-didot text-brand-blue">
                       <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
-                      Tools
+                      {portalHomeText(hero, "tools_section_title")}
                     </h2>
                     <p className="text-xs sm:text-sm text-subtitle font-plex">
-                      Internal utilities and helpers to navigate and use your Feedforward content faster.
+                      {portalHomeText(hero, "tools_section_blurb")}
                     </p>
                   </header>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
@@ -219,10 +240,10 @@ function HomeContent() {
                 <header className="mb-5 sm:mb-6">
                   <h2 className="flex items-center gap-3 text-xl sm:text-2xl font-bold mb-2 font-didot text-brand-blue">
                     <span className="inline-block w-8 h-1 rounded-full bg-brand-orange" />
-                    Experts
+                    {portalHomeText(hero, "experts_section_title")}
                   </h2>
                   <p className="text-xs sm:text-sm text-subtitle font-plex">
-                    Connect with experts and access the expert network.
+                    {portalHomeText(hero, "experts_section_blurb")}
                   </p>
                 </header>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">

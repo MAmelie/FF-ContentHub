@@ -59,6 +59,13 @@ export interface HomepageHero {
   id: number;
   cover?: ImageData;
   description?: string;
+  portal_intro?: string;
+  content_section_title?: string;
+  content_section_blurb?: string;
+  tools_section_title?: string;
+  tools_section_blurb?: string;
+  experts_section_title?: string;
+  experts_section_blurb?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
