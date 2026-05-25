@@ -2,13 +2,18 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { getAllDocuments } from "../../../lib/api";
-import { Document } from "../../../lib/types";
+import { getAllDocuments, getPodcastsPage } from "../../../lib/api";
+import { ContentPage, Document } from "../../../lib/types";
 import Loader from "../../components/Loader";
 import BackToHome from "../../components/BackToHome";
 import { FaPlay, FaPause, FaSearch, FaHeadphones, FaChevronDown, FaChevronUp, FaShareAlt, FaBackward, FaForward } from "react-icons/fa";
 
+const PODCASTS_FALLBACK_TITLE = "Podcasts";
+const PODCASTS_FALLBACK_INTRO =
+  "Dive into Feedforward conversations, interviews and explainers. Expand an episode for show notes.";
+
 const PodcastsPage = () => {
+  const [page, setPage] = useState<ContentPage | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +58,8 @@ const PodcastsPage = () => {
   useEffect(() => {
     const fetchPodcasts = async () => {
       try {
-        const data = await getAllDocuments();
+        const [pageData, data] = await Promise.all([getPodcastsPage(), getAllDocuments()]);
+        setPage(pageData);
         setDocuments(data.documents);
       } catch (err) {
         console.error("Error fetching podcasts:", err);
@@ -65,6 +71,9 @@ const PodcastsPage = () => {
 
     fetchPodcasts();
   }, []);
+
+  const pageTitle = page?.title?.trim() || PODCASTS_FALLBACK_TITLE;
+  const pageIntro = page?.intro?.trim() || PODCASTS_FALLBACK_INTRO;
 
   const podcastDocs = useMemo(() => {
     const mime = (file: Document["file"]) => file?.mime ?? file?.mimeType ?? "";
@@ -261,11 +270,10 @@ const PodcastsPage = () => {
           <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-brand-orange/90 text-white shadow-md">
             <FaHeadphones size={16} />
           </span>
-          Podcasts
+          {pageTitle}
         </h1>
         <p className="text-subtitle font-plex text-sm md:text-base w-full">
-          Dive into Feedforward conversations, interviews and explainers.
-          Expand an episode for show notes.
+          {pageIntro}
         </p>
         <div className="relative w-full">
           <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />

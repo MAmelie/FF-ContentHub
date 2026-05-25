@@ -1,9 +1,10 @@
 // app/tiles/[slug]/page.tsx
 "use client";
 import { useEffect, useState, use, useMemo } from "react";
-import { getTileBySlug, getAllDocuments } from "../../../../lib/api";
+import { getAdditionalContentPage, getTileBySlug, getAllDocuments } from "../../../../lib/api";
+import { ADDITIONAL_CONTENT_TILE_SLUG } from "@/lib/content-page-slugs";
 import { useRouter } from "next/navigation";
-import { Tile, ListItem, Doc, Document } from "@/../lib/types";
+import { ContentPage, Tile, ListItem, Doc, Document } from "@/../lib/types";
 // Recommendation, type RecommendationCategory — commented out with recommendations/tabs
 import { FaDownload, FaExternalLinkAlt, FaSearch, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
 import Loader from "@/components/Loader";
@@ -65,9 +66,14 @@ function parseCanonicalDateToTimestamp(dateLabel: string): number | null {
   return Number.isFinite(ts) ? ts : null;
 }
 
+const ADDITIONAL_CONTENT_FALLBACK_TITLE = "Additional content";
+const ADDITIONAL_CONTENT_FALLBACK_INTRO =
+  "Browse supplementary resources, guides, and downloads from Feedforward.";
+
 const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params);
   const [tile, setTile] = useState<Tile | null>(null);
+  const [additionalContentPage, setAdditionalContentPage] = useState<ContentPage | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,13 +85,18 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const router = useRouter();
 
   const isMemberSessions = slug?.toLowerCase() === MEMBER_SESSIONS_TILE_SLUG;
+  const isAdditionalContent = slug?.toLowerCase() === ADDITIONAL_CONTENT_TILE_SLUG;
 
   useEffect(() => {
     const fetchTile = async () => {
       if (slug) {
         try {
-          const fetchedTile = await getTileBySlug(slug);
+          const [fetchedTile, pageData] = await Promise.all([
+            getTileBySlug(slug),
+            isAdditionalContent ? getAdditionalContentPage() : Promise.resolve(null),
+          ]);
           setTile(fetchedTile);
+          setAdditionalContentPage(pageData);
         } catch (err) {
           // For member-sessions we always show the canonical list; tile is only for optional links
           if (slug?.toLowerCase() !== MEMBER_SESSIONS_TILE_SLUG) {
@@ -572,8 +583,15 @@ const TilePage = ({ params }: { params: Promise<{ slug: string }> }) => {
         ) : tile ? (
           <>
             <h1 className="text-3xl leading-snug capitalize font-bold text-brand-blue font-didot">
-              {tile.title}
+              {isAdditionalContent
+                ? additionalContentPage?.title?.trim() || ADDITIONAL_CONTENT_FALLBACK_TITLE
+                : tile.title}
             </h1>
+            {isAdditionalContent && (
+              <p className="mt-2 text-subtitle font-plex text-sm md:text-base max-w-2xl">
+                {additionalContentPage?.intro?.trim() || ADDITIONAL_CONTENT_FALLBACK_INTRO}
+              </p>
+            )}
 
             {/* External Link Section */}
             {tile.link && (

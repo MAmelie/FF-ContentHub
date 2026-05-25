@@ -55,6 +55,15 @@ export interface Tile {
   category: "archive" | "tool" | "dashboard" | "content" | "experts"; // Category enumeration
 }
 
+export interface ContentPage {
+  id: number | string;
+  title?: string;
+  intro?: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+}
+
 export interface HomepageHero {
   id: number;
   cover?: ImageData;

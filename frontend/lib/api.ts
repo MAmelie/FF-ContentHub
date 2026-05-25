@@ -1,7 +1,7 @@
 // lib/api.ts
 import axios, { AxiosInstance } from "axios";
 import { getAuthToken } from "./auth";
-import type { AboutPage, ExpertNetFaqItem, TeamMember } from "./types";
+import type { AboutPage, ContentPage, ExpertNetFaqItem, TeamMember } from "./types";
 
 // Use Strapi URL from env; in local dev fall back to localhost so the app works without .env
 const strapiUrl =
@@ -77,6 +77,44 @@ export const getHomepageHero = async () => {
   }
   return null;
 };
+
+function normalizeContentPage(data: Record<string, unknown>): ContentPage {
+  const attrs = data.attributes as Record<string, unknown> | undefined;
+  const str = (key: string) => {
+    const v = data[key] ?? attrs?.[key];
+    return typeof v === "string" ? v : undefined;
+  };
+  return {
+    id: (data.id as number) ?? (data.documentId as string) ?? 0,
+    title: str("title"),
+    intro: str("intro"),
+    createdAt: str("createdAt") ?? "",
+    updatedAt: str("updatedAt") ?? "",
+    publishedAt: str("publishedAt") ?? "",
+  };
+}
+
+async function getContentPage(paths: string[]): Promise<ContentPage | null> {
+  for (const path of paths) {
+    try {
+      const response = await api.get(path);
+      const data = response.data?.data as Record<string, unknown> | undefined;
+      if (!data) continue;
+      return normalizeContentPage(data);
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) continue;
+      console.warn(`Content page not available (${path}):`, err instanceof Error ? err.message : err);
+      return null;
+    }
+  }
+  return null;
+}
+
+export const getPodcastsPage = () =>
+  getContentPage(["api/podcasts-page", "api/podcasts-pages"]);
+
+export const getAdditionalContentPage = () =>
+  getContentPage(["api/additional-content-page", "api/additional-content-pages"]);
 
 // Normalize one logo media item (Strapi v4/v5 can return { url } or { data: { attributes: { url } } }).
 function normalizeLogoItem(media: unknown): { url: string; mime?: string; name?: string; alternativeText?: string } | null {
