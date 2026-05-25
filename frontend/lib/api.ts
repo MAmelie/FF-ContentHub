@@ -1,7 +1,7 @@
 // lib/api.ts
 import axios, { AxiosInstance } from "axios";
 import { getAuthToken } from "./auth";
-import type { AboutPage, TeamMember } from "./types";
+import type { AboutPage, ExpertNetFaqItem, TeamMember } from "./types";
 
 // Use Strapi URL from env; in local dev fall back to localhost so the app works without .env
 const strapiUrl =
@@ -287,11 +287,49 @@ function normalizeExpertBio(raw: Record<string, unknown>): {
   };
 }
 
+function normalizeExpertNetFaqItem(
+  raw: Record<string, unknown>
+): ExpertNetFaqItem | null {
+  const category = String(raw.category ?? "").trim();
+  const question = String(raw.question ?? raw.q ?? "").trim();
+  const answer = String(raw.answer ?? raw.a ?? "").trim();
+  if (!category || !question || !answer) return null;
+  const sortRaw = raw.sort_order ?? raw.sortOrder;
+  const sort_order =
+    typeof sortRaw === "number"
+      ? sortRaw
+      : sortRaw != null && sortRaw !== ""
+        ? Number(sortRaw)
+        : undefined;
+  return {
+    category,
+    question,
+    answer,
+    sort_order: Number.isFinite(sort_order) ? sort_order : undefined,
+  };
+}
+
+function normalizeExpertNetFaqItems(raw: unknown): ExpertNetFaqItem[] {
+  const list = Array.isArray(raw)
+    ? raw
+    : Array.isArray((raw as Record<string, unknown>)?.data)
+      ? (raw as { data: Record<string, unknown>[] }).data
+      : [];
+  return list
+    .map((item) =>
+      normalizeExpertNetFaqItem(
+        item && typeof item === "object" ? (item as Record<string, unknown>) : {}
+      )
+    )
+    .filter((item): item is ExpertNetFaqItem => item != null)
+    .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+}
+
 // Get expert-net content (single type with relation expert_bios)
 export const getExpertNet = async () => {
   try {
     const response = await api.get(
-      "api/expert-net?populate[expert_bios][populate]=photo"
+      "api/expert-net?populate[expert_bios][populate]=photo&populate[faq_items]=*"
     );
     const data = response.data?.data as Record<string, unknown> | undefined;
     if (!data) return null;
@@ -310,11 +348,23 @@ export const getExpertNet = async () => {
         if (orderA !== orderB) return orderA - orderB;
         return (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
       });
+    const rawFaq = data.faq_items ?? attrs?.faq_items;
+    const faq_items = normalizeExpertNetFaqItems(rawFaq);
+    const faq_heading =
+      ((data.faq_heading as string) ?? (attrs?.faq_heading as string))?.trim() || undefined;
+    const faq_always_visible_category =
+      (
+        (data.faq_always_visible_category as string) ??
+        (attrs?.faq_always_visible_category as string)
+      )?.trim() || undefined;
     return {
       id: (data.id as number) ?? (data.documentId as string) ?? 0,
       title: (data.title as string) ?? (attrs?.title as string),
       description: (data.description as string) ?? (attrs?.description as string),
       expert_bios,
+      faq_heading,
+      faq_always_visible_category,
+      faq_items: faq_items.length > 0 ? faq_items : undefined,
       createdAt: (data.createdAt as string) ?? (attrs?.createdAt as string) ?? "",
       updatedAt: (data.updatedAt as string) ?? (attrs?.updatedAt as string) ?? "",
       publishedAt: (data.publishedAt as string) ?? (attrs?.publishedAt as string) ?? "",

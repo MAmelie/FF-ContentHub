@@ -88,11 +88,21 @@ export interface ExpertBio {
   publishedAt: string;
 }
 
+export interface ExpertNetFaqItem {
+  category: string;
+  question: string;
+  answer: string;
+  sort_order?: number;
+}
+
 export interface ExpertNet {
   id: number | string;
   title?: string;
   description?: string;
   expert_bios?: ExpertBio[];
+  faq_heading?: string;
+  faq_always_visible_category?: string;
+  faq_items?: ExpertNetFaqItem[];
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
