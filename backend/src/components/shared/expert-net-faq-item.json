@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_shared_expert_net_faq_items",
+  "info": {
+    "displayName": "Expert Net FAQ Item",
+    "icon": "question",
+    "description": "One FAQ entry for the Expert Advisory Network page"
+  },
+  "options": {},
+  "attributes": {
+    "category": {
+      "type": "string",
+      "required": true
+    },
+    "question": {
+      "type": "string",
+      "required": true
+    },
+    "answer": {
+      "type": "text",
+      "required": true
+    },
+    "sort_order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

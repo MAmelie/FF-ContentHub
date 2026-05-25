@@ -21,6 +21,18 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::expert-bio.expert-bio"
+    },
+    "faq_heading": {
+      "type": "string"
+    },
+    "faq_always_visible_category": {
+      "type": "string",
+      "default": "Overview"
+    },
+    "faq_items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.expert-net-faq-item"
     }
   }
 }

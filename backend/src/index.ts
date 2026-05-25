@@ -1,4 +1,74 @@
 // import type { Core } from '@strapi/strapi';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const EXPERT_NET_UID = 'api::expert-net.expert-net';
+
+type ExpertNetFaqSeed = {
+  faq_heading?: string;
+  faq_always_visible_category?: string;
+  faq_items: Array<{
+    category: string;
+    question: string;
+    answer: string;
+    sort_order?: number;
+  }>;
+};
+
+async function seedExpertNetFaqIfEmpty(strapi: {
+  dirs: { app: { root: string } };
+  log: { info: (msg: string) => void; warn: (msg: string) => void };
+  documents: (uid: string) => {
+    findFirst: (params?: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
+    update: (params: Record<string, unknown>) => Promise<unknown>;
+  };
+}) {
+  const seedPath = path.join(strapi.dirs.app.root, 'data', 'expert-net-faq-seed.json');
+  if (!fs.existsSync(seedPath)) {
+    strapi.log.warn(`Expert-Net FAQ seed file missing: ${seedPath}`);
+    return;
+  }
+
+  const seed = JSON.parse(fs.readFileSync(seedPath, 'utf8')) as ExpertNetFaqSeed;
+  if (!Array.isArray(seed.faq_items) || seed.faq_items.length === 0) return;
+
+  const force = process.env.SEED_EXPERT_NET_FAQ === 'force';
+
+  const published = await strapi.documents(EXPERT_NET_UID).findFirst({
+    status: 'published',
+    populate: { faq_items: true },
+  });
+  const draft = await strapi.documents(EXPERT_NET_UID).findFirst({
+    status: 'draft',
+    populate: { faq_items: true },
+  });
+  const doc = published ?? draft;
+  if (!doc?.documentId) {
+    strapi.log.warn('Expert-Net entry not found; skip FAQ seed.');
+    return;
+  }
+
+  const existingItems = doc.faq_items;
+  const hasItems = Array.isArray(existingItems) && existingItems.length > 0;
+  if (hasItems && !force) {
+    strapi.log.info('Expert-Net FAQ already populated; skip seed (set SEED_EXPERT_NET_FAQ=force to overwrite).');
+    return;
+  }
+
+  await strapi.documents(EXPERT_NET_UID).update({
+    documentId: doc.documentId,
+    data: {
+      faq_heading: seed.faq_heading ?? 'Frequently asked questions',
+      faq_always_visible_category: seed.faq_always_visible_category ?? 'Overview',
+      faq_items: seed.faq_items,
+    },
+    status: 'published',
+  });
+
+  strapi.log.info(
+    `Expert-Net FAQ seeded: ${seed.faq_items.length} items (${force ? 'forced overwrite' : 'was empty'}).`
+  );
+}
 
 export default {
   /**
@@ -76,6 +146,12 @@ export default {
         grantConfig.discord.scope = [...scopes, 'guilds'];
         await pluginStore.set({ key: 'grant', value: grantConfig });
       }
+    }
+
+    try {
+      await seedExpertNetFaqIfEmpty(strapi);
+    } catch (err) {
+      strapi.log.warn(`Expert-Net FAQ seed failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   },
 };

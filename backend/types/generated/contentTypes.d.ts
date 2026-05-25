@@ -609,6 +609,7 @@ export interface ApiExpertBioExpertBio extends Struct.CollectionTypeSchema {
     name: Schema.Attribute.String & Schema.Attribute.Required;
     order: Schema.Attribute.Integer;
     photo: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
+    profileUrl: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     title: Schema.Attribute.String & Schema.Attribute.Required;
@@ -637,6 +638,10 @@ export interface ApiExpertNetExpertNet extends Struct.SingleTypeSchema {
       'oneToMany',
       'api::expert-bio.expert-bio'
     >;
+    faq_always_visible_category: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Overview'>;
+    faq_heading: Schema.Attribute.String;
+    faq_items: Schema.Attribute.Component<'shared.expert-net-faq-item', true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
