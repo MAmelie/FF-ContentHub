@@ -3,6 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const EXPERT_NET_UID = 'api::expert-net.expert-net';
+const HOMEPAGE_HERO_UID = 'api::homepage-hero.homepage-hero';
+const HOMEPAGE_HERO_TITLE = 'Member Portal Home';
+const LOGO_UID = 'api::logo.logo';
+const LOGO_TITLE = 'Logo';
+const WRONG_CM_CONFIG_KEY = `plugin_content-manager_configuration_content_types::${HOMEPAGE_HERO_UID}`;
 
 type ExpertNetFaqSeed = {
   faq_heading?: string;
@@ -68,6 +73,93 @@ async function seedExpertNetFaqIfEmpty(strapi: {
   strapi.log.info(
     `Expert-Net FAQ seeded: ${seed.faq_items.length} items (${force ? 'forced overwrite' : 'was empty'}).`
   );
+}
+
+type CmConfig = {
+  uid?: string;
+  settings?: { mainField?: string; defaultSortBy?: string; [key: string]: unknown };
+  metadatas?: Record<string, unknown>;
+  layouts?: Record<string, unknown>;
+};
+
+async function fixContentManagerEntryTitle(
+  strapi: {
+    db: {
+      connection: (table: string) => {
+        where: (q: Record<string, string>) => {
+          first: () => Promise<{ value: unknown } | undefined>;
+          update: (data: Record<string, unknown>) => Promise<unknown>;
+          del: () => Promise<unknown>;
+        };
+      };
+    };
+    log: { info: (msg: string) => void };
+  },
+  uid: string,
+  mainField: string
+) {
+  const key = `plugin_content_manager_configuration_content_types::${uid}`;
+  const row = await strapi.db.connection('strapi_core_store_settings').where({ key }).first();
+  if (!row?.value) return;
+
+  const value = (
+    typeof row.value === 'string' ? JSON.parse(row.value) : row.value
+  ) as CmConfig;
+  if (value.settings?.mainField === mainField) return;
+
+  value.settings = {
+    ...value.settings,
+    mainField,
+    defaultSortBy: mainField,
+  };
+
+  await strapi.db
+    .connection('strapi_core_store_settings')
+    .where({ key })
+    .update({ value: JSON.stringify(value) });
+
+  strapi.log.info(`${uid}: admin entry title set to "${mainField}".`);
+}
+
+async function removeWrongContentManagerConfig(strapi: {
+  db: {
+    connection: (table: string) => {
+      where: (q: Record<string, string>) => { del: () => Promise<unknown> };
+    };
+  };
+}) {
+  await strapi.db.connection('strapi_core_store_settings').where({ key: WRONG_CM_CONFIG_KEY }).del();
+}
+
+async function ensureSingleTypeTitle(
+  strapi: {
+    log: { info: (msg: string) => void; warn: (msg: string) => void };
+    documents: (uid: string) => {
+      findFirst: (params?: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
+      update: (params: Record<string, unknown>) => Promise<unknown>;
+    };
+  },
+  uid: string,
+  title: string,
+  label: string
+) {
+  const published = await strapi.documents(uid).findFirst({ status: 'published' });
+  const draft = await strapi.documents(uid).findFirst({ status: 'draft' });
+  const doc = published ?? draft;
+  if (!doc?.documentId) {
+    strapi.log.warn(`${label} entry not found; skip title seed.`);
+    return;
+  }
+
+  const existingTitle = typeof doc.title === 'string' ? doc.title.trim() : '';
+  if (existingTitle) return;
+
+  await strapi.documents(uid).update({
+    documentId: doc.documentId,
+    data: { title },
+    status: published ? 'published' : 'draft',
+  });
+  strapi.log.info(`${label}: set title to "${title}".`);
 }
 
 export default {
@@ -152,6 +244,18 @@ export default {
       await seedExpertNetFaqIfEmpty(strapi);
     } catch (err) {
       strapi.log.warn(`Expert-Net FAQ seed failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    try {
+      await removeWrongContentManagerConfig(strapi);
+      await fixContentManagerEntryTitle(strapi, HOMEPAGE_HERO_UID, 'title');
+      await fixContentManagerEntryTitle(strapi, LOGO_UID, 'title');
+      await ensureSingleTypeTitle(strapi, HOMEPAGE_HERO_UID, HOMEPAGE_HERO_TITLE, 'Member Portal Home');
+      await ensureSingleTypeTitle(strapi, LOGO_UID, LOGO_TITLE, 'Logo');
+    } catch (err) {
+      strapi.log.warn(
+        `Single-type admin title setup failed: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   },
 };

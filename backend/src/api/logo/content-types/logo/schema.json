@@ -11,6 +11,10 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Logo"
+    },
     "logo": {
       "type": "media",
       "multiple": true,

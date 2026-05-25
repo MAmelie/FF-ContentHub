@@ -4,13 +4,17 @@
   "info": {
     "singularName": "homepage-hero",
     "pluralName": "homepage-heroes",
-    "displayName": "Homepage-Hero"
+    "displayName": "Member Portal Home"
   },
   "options": {
     "draftAndPublish": true
   },
   "pluginOptions": {},
   "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Member Portal Home"
+    },
     "cover": {
       "type": "media",
       "multiple": false,
@@ -22,6 +26,27 @@
       ]
     },
     "description": {
+      "type": "text"
+    },
+    "portal_intro": {
+      "type": "text"
+    },
+    "content_section_title": {
+      "type": "string"
+    },
+    "content_section_blurb": {
+      "type": "text"
+    },
+    "tools_section_title": {
+      "type": "string"
+    },
+    "tools_section_blurb": {
+      "type": "text"
+    },
+    "experts_section_title": {
+      "type": "string"
+    },
+    "experts_section_blurb": {
       "type": "text"
     }
   }
