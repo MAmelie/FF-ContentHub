@@ -1,2 +1,6 @@
-/** Tile slug for the Additional content page (must match Content Manager → Tiles). */
-export const ADDITIONAL_CONTENT_TILE_SLUG = "additional-content";
+/**
+ * Tile slug that opens /tiles/[slug] for Additional content (list items / PDFs).
+ * Must match Content Manager → Tiles → slug (e.g. "tile").
+ * Homepage card copy comes from that Tile; page heading + intro from Additional Content Page single type.
+ */
+export const ADDITIONAL_CONTENT_TILE_SLUG = "tile";

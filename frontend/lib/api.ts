@@ -12,6 +12,11 @@ export const api: AxiosInstance = axios.create({
   baseURL: strapiUrl,
 });
 
+/** CMS reads use Public role permissions (no JWT). Logged-in users otherwise hit Authenticated role, which often lacks find on new types. */
+export const publicApi: AxiosInstance = axios.create({
+  baseURL: strapiUrl,
+});
+
 // Fake token used by "Use test user" in dev; Strapi would reject it, so don't send it.
 const DEV_FAKE_JWT = "dev-jwt";
 
@@ -24,6 +29,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+function logPublicCmsError(path: string, err: unknown) {
+  if (axios.isAxiosError(err)) {
+    const status = err.response?.status;
+    if (status === 403) {
+      console.warn(
+        `[Strapi] 403 for ${path} — enable Public → find in Users & Permissions, and Publish (not Draft only).`
+      );
+      return;
+    }
+  }
+  console.warn(`[Strapi] ${path}:`, err instanceof Error ? err.message : err);
+}
+
 // Get all tiles. Returns { tiles: [] } on error so the app can render when backend is unreachable.
 export const getAllTiles = async (searchQuery: string = "") => {
   try {
@@ -31,7 +49,7 @@ export const getAllTiles = async (searchQuery: string = "") => {
       ? `&filters[title][$containsi]=${searchQuery}`
       : "";
     // Strapi v5 populate syntax: use nested object format instead of array indices
-    const response = await api.get(
+    const response = await publicApi.get(
       `api/tiles?populate[cover]=true&populate[list_items][populate][attachment]=true&populate[docs]=true${searchFilter}`
     );
     return {
@@ -47,7 +65,7 @@ export const getAllTiles = async (searchQuery: string = "") => {
 export const getTileBySlug = async (slug: string) => {
   try {
     // Strapi v5 populate syntax: use nested object format instead of array indices
-    const response = await api.get(
+    const response = await publicApi.get(
       `api/tiles?filters[slug]=${slug}&populate[cover]=true&populate[list_items][populate][attachment]=true&populate[docs]=true` // &populate[recommendations]=true — commented out; only list items (e.g. 4 PDFs) shown on Additional content
     ); // Fetch a single tile using the slug parameter with proper nested population
     if (response.data.data.length > 0) {
@@ -66,12 +84,12 @@ export const getTileBySlug = async (slug: string) => {
 export const getHomepageHero = async () => {
   for (const path of ["api/homepage-hero?populate=cover", "api/homepage-heroes?populate=cover"]) {
     try {
-      const response = await api.get(path);
+      const response = await publicApi.get(path);
       const data = response.data?.data;
       return data ?? null;
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) continue;
-      console.warn("Homepage hero not available (backend may be down):", err instanceof Error ? err.message : err);
+      logPublicCmsError(path, err);
       return null;
     }
   }
@@ -97,13 +115,13 @@ function normalizeContentPage(data: Record<string, unknown>): ContentPage {
 async function getContentPage(paths: string[]): Promise<ContentPage | null> {
   for (const path of paths) {
     try {
-      const response = await api.get(path);
+      const response = await publicApi.get(path);
       const data = response.data?.data as Record<string, unknown> | undefined;
       if (!data) continue;
       return normalizeContentPage(data);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) continue;
-      console.warn(`Content page not available (${path}):`, err instanceof Error ? err.message : err);
+      logPublicCmsError(path, err);
       return null;
     }
   }
@@ -143,7 +161,7 @@ export const getLogo = async (): Promise<{ id: number; logo: { url: string; mime
   // The backend logo controller forces a safe populate so media is still returned.
   for (const path of ["api/logo", "api/logos"]) {
     try {
-      const response = await api.get(path);
+      const response = await publicApi.get(path);
       const data = response.data?.data;
       if (!data || typeof data !== "object") continue;
       const raw = data as Record<string, unknown>;
@@ -250,7 +268,7 @@ function normalizeDocument(raw: Record<string, unknown>): {
 // Get all documents (used for /documents page and /podcasts – podcasts = documents with audio file)
 export const getAllDocuments = async () => {
   try {
-    const response = await api.get("api/documents?populate=file&pagination[pageSize]=100");
+    const response = await publicApi.get("api/documents?populate=file&pagination[pageSize]=100");
     const data = response.data?.data;
     const rawList = Array.isArray(data) ? data : [];
     const documents = rawList.map((item: Record<string, unknown>) => normalizeDocument(item));
@@ -366,7 +384,7 @@ function normalizeExpertNetFaqItems(raw: unknown): ExpertNetFaqItem[] {
 // Get expert-net content (single type with relation expert_bios)
 export const getExpertNet = async () => {
   try {
-    const response = await api.get(
+    const response = await publicApi.get(
       "api/expert-net?populate[expert_bios][populate]=photo&populate[faq_items]=*"
     );
     const data = response.data?.data as Record<string, unknown> | undefined;
@@ -395,10 +413,16 @@ export const getExpertNet = async () => {
         (data.faq_always_visible_category as string) ??
         (attrs?.faq_always_visible_category as string)
       )?.trim() || undefined;
+    const ai_guide_opening_message =
+      (
+        (data.ai_guide_opening_message as string) ??
+        (attrs?.ai_guide_opening_message as string)
+      )?.trim() || undefined;
     return {
       id: (data.id as number) ?? (data.documentId as string) ?? 0,
       title: (data.title as string) ?? (attrs?.title as string),
       description: (data.description as string) ?? (attrs?.description as string),
+      ai_guide_opening_message,
       expert_bios,
       faq_heading,
       faq_always_visible_category,
@@ -418,7 +442,7 @@ export const getExpertNet = async () => {
 // so profile pages work before you've re-saved each Expert-Bio in the admin.
 export const getExpertBySlug = async (slug: string) => {
   try {
-    const response = await api.get(
+    const response = await publicApi.get(
       `api/expert-bios?filters[slug][$eq]=${encodeURIComponent(slug)}&populate=photo`
     );
     const data = response.data?.data;
@@ -478,7 +502,7 @@ export const getAboutPage = async (): Promise<AboutPage | null> => {
     "api/about-pages?populate[hero_image]=true",
   ]) {
     try {
-      const response = await api.get(path);
+      const response = await publicApi.get(path);
       const rawData = response.data?.data as unknown;
       const data = Array.isArray(rawData)
         ? (rawData[0] as Record<string, unknown> | undefined)
@@ -509,7 +533,7 @@ export const getAboutPage = async (): Promise<AboutPage | null> => {
       // Fallback: if about-page relation populate is blocked/missing, load team members directly.
       if (team_members.length === 0) {
         try {
-          const teamResponse = await api.get(
+          const teamResponse = await publicApi.get(
             "api/team-members?populate=photo&filters[active][$eq]=true&sort[0]=team_group:asc&sort[1]=order:asc&sort[2]=name:asc&pagination[pageSize]=100"
           );
           const teamData = teamResponse.data?.data as unknown;
