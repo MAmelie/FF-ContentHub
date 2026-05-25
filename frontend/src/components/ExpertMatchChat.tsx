@@ -151,12 +151,14 @@ function matchExperts(experts: ExpertBio[], queryTokens: string[], maxResults: n
 
 export type ChatMessage = { role: "user" | "assistant"; content: string; experts?: ExpertBio[] };
 
-const INTRO_MESSAGE =
+export const EXPERT_MATCH_CHAT_FALLBACK_OPENING =
   "Hi! I'm here to help match you with the right expert. What challenges are you facing or what would you like to accomplish with an expert advisory session?";
 
 interface ExpertMatchChatProps {
   experts: ExpertBio[];
   getExpertSlug: (bio: ExpertBio) => string;
+  /** First assistant message; from Strapi Expert-Net when set. */
+  openingMessage?: string;
   /** When set, shows “Book an expert session” beside the match helper (e.g. Calendly URL). */
   bookSessionHref?: string;
   /** Omit outer section spacing when rendered inside a parent card (e.g. expert-net hero). */
@@ -170,13 +172,17 @@ interface ExpertMatchChatProps {
 export default function ExpertMatchChat({
   experts,
   getExpertSlug,
+  openingMessage,
   bookSessionHref,
   embedInCard = false,
   open,
   onOpenChange,
 }: ExpertMatchChatProps) {
+  const introText = openingMessage?.trim() || EXPERT_MATCH_CHAT_FALLBACK_OPENING;
   const [internalOpen, setInternalOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: INTRO_MESSAGE }]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { role: "assistant", content: introText },
+  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const isOpen = open ?? internalOpen;

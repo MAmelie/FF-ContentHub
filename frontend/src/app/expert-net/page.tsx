@@ -7,7 +7,9 @@ import { ExpertNet, ExpertBio } from "../../../lib/types";
 import { slugFromName } from "../../../lib/expertAdvisoryTopics";
 import Loader from "../../components/Loader";
 import BackToHome from "../../components/BackToHome";
-import ExpertMatchChat from "../../components/ExpertMatchChat";
+import ExpertMatchChat, {
+  EXPERT_MATCH_CHAT_FALLBACK_OPENING,
+} from "../../components/ExpertMatchChat";
 import { EXPERT_SESSION_CALENDLY_URL } from "@/lib/expertSessionCalendly";
 import {
   EXPERT_NET_FALLBACK_FAQ,
@@ -368,6 +370,8 @@ const ExpertNetPage = () => {
   const pageTitle = expertNet.title?.trim() || EXPERT_NET_FALLBACK_TITLE;
   const introContent =
     expertNet.description?.trim() || EXPERT_NET_FALLBACK_DESCRIPTION;
+  const aiGuideOpening =
+    expertNet.ai_guide_opening_message?.trim() || EXPERT_MATCH_CHAT_FALLBACK_OPENING;
 
   return (
     <>
@@ -399,6 +403,7 @@ const ExpertNetPage = () => {
               <ExpertMatchChat
                 experts={bios}
                 getExpertSlug={expertSlug}
+                openingMessage={aiGuideOpening}
                 bookSessionHref={EXPERT_SESSION_CALENDLY_URL}
                 embedInCard
                 open={isAiGuideOpen}
