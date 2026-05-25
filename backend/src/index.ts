@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const EXPERT_NET_UID = 'api::expert-net.expert-net';
+const EXPERT_NET_AI_GUIDE_OPENING_DEFAULT =
+  "Hi! I'm here to help match you with the right expert. What challenges are you facing or what would you like to accomplish with an expert advisory session?";
 const HOMEPAGE_HERO_UID = 'api::homepage-hero.homepage-hero';
 const HOMEPAGE_HERO_TITLE = 'Member Portal Home';
 const LOGO_UID = 'api::logo.logo';
@@ -88,6 +90,33 @@ async function seedExpertNetFaqIfEmpty(strapi: {
   );
 }
 
+async function ensureExpertNetAiGuideOpening(strapi: {
+  log: { info: (msg: string) => void; warn: (msg: string) => void };
+  documents: (uid: string) => {
+    findFirst: (params?: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
+    update: (params: Record<string, unknown>) => Promise<unknown>;
+  };
+}) {
+  const published = await strapi.documents(EXPERT_NET_UID).findFirst({ status: 'published' });
+  const draft = await strapi.documents(EXPERT_NET_UID).findFirst({ status: 'draft' });
+  const doc = published ?? draft;
+  if (!doc?.documentId) {
+    strapi.log.warn('Expert-Net entry not found; skip AI guide opening message seed.');
+    return;
+  }
+
+  const existing =
+    typeof doc.ai_guide_opening_message === 'string' ? doc.ai_guide_opening_message.trim() : '';
+  if (existing) return;
+
+  await strapi.documents(EXPERT_NET_UID).update({
+    documentId: doc.documentId,
+    data: { ai_guide_opening_message: EXPERT_NET_AI_GUIDE_OPENING_DEFAULT },
+    status: published ? 'published' : 'draft',
+  });
+  strapi.log.info('Expert-Net: set default AI guide opening message.');
+}
+
 type CmConfig = {
   uid?: string;
   settings?: { mainField?: string; defaultSortBy?: string; [key: string]: unknown };
@@ -132,6 +161,61 @@ async function fixContentManagerEntryTitle(
     .update({ value: JSON.stringify(value) });
 
   strapi.log.info(`${uid}: admin entry title set to "${mainField}".`);
+}
+
+const PUBLIC_CMS_FIND_ACTIONS = [
+  'api::podcasts-page.podcasts-page.find',
+  'api::additional-content-page.additional-content-page.find',
+  'api::homepage-hero.homepage-hero.find',
+  'api::expert-net.expert-net.find',
+];
+
+async function ensureRoleHasFindPermission(
+  strapi: {
+    db: {
+      connection: (table: string) => {
+        where: (q: Record<string, unknown>) => {
+          first: () => Promise<{ id: number } | undefined>;
+        };
+        insert: (row: Record<string, unknown>) => Promise<unknown>;
+      };
+      query: (uid: string) => {
+        findOne: (params: { where: Record<string, unknown> }) => Promise<{ id: number } | null>;
+      };
+    };
+    log: { info: (msg: string) => void };
+  },
+  roleType: 'public' | 'authenticated',
+  action: string
+) {
+  const role = await strapi.db.query('plugin::users-permissions.role').findOne({
+    where: { type: roleType },
+  });
+  if (!role?.id) return;
+
+  const permission = await strapi.db.query('plugin::users-permissions.permission').findOne({
+    where: { action },
+  });
+  if (!permission?.id) return;
+
+  const linked = await strapi.db
+    .connection('up_permissions_role_lnk')
+    .where({ permission_id: permission.id, role_id: role.id })
+    .first();
+  if (linked) return;
+
+  await strapi.db.connection('up_permissions_role_lnk').insert({
+    permission_id: permission.id,
+    role_id: role.id,
+  });
+  strapi.log.info(`${roleType} role: enabled ${action}`);
+}
+
+async function ensurePublicCmsFindPermissions(strapi: Parameters<typeof ensureRoleHasFindPermission>[0]) {
+  for (const action of PUBLIC_CMS_FIND_ACTIONS) {
+    await ensureRoleHasFindPermission(strapi, 'public', action);
+    await ensureRoleHasFindPermission(strapi, 'authenticated', action);
+  }
 }
 
 async function removeWrongContentManagerConfig(strapi: {
@@ -296,11 +380,13 @@ export default {
 
     try {
       await seedExpertNetFaqIfEmpty(strapi);
+      await ensureExpertNetAiGuideOpening(strapi);
     } catch (err) {
       strapi.log.warn(`Expert-Net FAQ seed failed: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     try {
+      await ensurePublicCmsFindPermissions(strapi);
       await removeWrongContentManagerConfig(strapi);
       await fixContentManagerEntryTitle(strapi, HOMEPAGE_HERO_UID, 'title');
       await fixContentManagerEntryTitle(strapi, LOGO_UID, 'title');

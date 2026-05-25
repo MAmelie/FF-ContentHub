@@ -661,6 +661,7 @@ export interface ApiExpertNetExpertNet extends Struct.SingleTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    ai_guide_opening_message: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

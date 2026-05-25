@@ -115,6 +115,7 @@ export interface ExpertNet {
   id: number | string;
   title?: string;
   description?: string;
+  ai_guide_opening_message?: string;
   expert_bios?: ExpertBio[];
   faq_heading?: string;
   faq_always_visible_category?: string;

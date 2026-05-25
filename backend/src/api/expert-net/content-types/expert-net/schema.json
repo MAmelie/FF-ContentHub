@@ -17,6 +17,9 @@
     "description": {
       "type": "richtext"
     },
+    "ai_guide_opening_message": {
+      "type": "text"
+    },
     "expert_bios": {
       "type": "relation",
       "relation": "oneToMany",
