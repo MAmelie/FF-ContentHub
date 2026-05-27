@@ -22,7 +22,7 @@ const TEAM_CARD_TOP_IMAGE =
 
 /** Core team uses circular portraits like founding team. */
 const CORE_ROW_IMAGE =
-  "h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 shrink-0 rounded-full object-cover border border-card/60 shadow-sm";
+  "h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 shrink-0 rounded-full object-cover border border-card/60 shadow-sm mx-auto";
 
 const FOUNDING_PHOTO =
   "h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 shrink-0 rounded-full object-cover border border-card/60 shadow-sm ring-2 ring-transparent ring-offset-2 ring-offset-gray-50 transition-[box-shadow] duration-200 ease-out group-hover:ring-[var(--brand-orange)]";
@@ -112,24 +112,26 @@ function CoreTeamRowCard({
         />
       ) : (
         <div
-          className="h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 rounded-full shrink-0 bg-secondary-blue/90 flex items-center justify-center border border-card/60 shadow-sm"
+          className="h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 rounded-full shrink-0 bg-secondary-blue/90 flex items-center justify-center border border-card/60 shadow-sm mx-auto"
           aria-hidden
         >
           <FaUser className="text-white/40 text-3xl sm:text-4xl" />
         </div>
       )}
-      <h3 className="text-sm font-semibold text-brand-blue font-didot leading-tight">
-        {member.name}
-      </h3>
-      <p className="text-xs text-subtitle font-plex italic leading-snug">
-        {member.role}
-      </p>
-      {member.bio && (
-        <div
-          className="mt-0.5 text-[11px] sm:text-xs text-subtitle leading-relaxed font-plex [&_p]:mb-1.5 [&_p:last-child]:mb-0"
-          dangerouslySetInnerHTML={{ __html: member.bio }}
-        />
-      )}
+      <div className="mt-2 text-left">
+        <h3 className="text-sm font-semibold text-brand-blue font-didot leading-tight">
+          {member.name}
+        </h3>
+        <p className="mt-0.5 text-xs text-subtitle font-plex italic leading-snug">
+          {member.role}
+        </p>
+        {member.bio && (
+          <div
+            className="mt-1 text-[11px] sm:text-xs text-subtitle leading-relaxed font-plex [&_p]:mb-1.5 [&_p:last-child]:mb-0"
+            dangerouslySetInnerHTML={{ __html: member.bio }}
+          />
+        )}
+      </div>
     </article>
   );
 }
