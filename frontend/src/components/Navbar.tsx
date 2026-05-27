@@ -156,10 +156,8 @@ const Navbar = () => {
           <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <img
               src={
-                !logoLoadFailed &&
-                logo?.logo?.[0]?.url &&
-                process.env.NEXT_PUBLIC_STRAPI_URL
-                  ? `${process.env.NEXT_PUBLIC_STRAPI_URL}${logo.logo[0].url}`
+                !logoLoadFailed && logo?.logo?.[0]?.url
+                  ? logo.logo[0].url
                   : FALLBACK_LOGO
               }
               alt=""
@@ -337,10 +335,8 @@ const Navbar = () => {
             <Link href="/" className="flex items-center gap-4">
               <img
                 src={
-                  !logoLoadFailed &&
-                  logo?.logo?.[0]?.url &&
-                  process.env.NEXT_PUBLIC_STRAPI_URL
-                    ? `${process.env.NEXT_PUBLIC_STRAPI_URL}${logo.logo[0].url}`
+                  !logoLoadFailed && logo?.logo?.[0]?.url
+                    ? logo.logo[0].url
                     : FALLBACK_LOGO
                 }
                 alt=""

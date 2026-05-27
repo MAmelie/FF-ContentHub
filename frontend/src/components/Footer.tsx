@@ -46,6 +46,11 @@ const Footer = () => {
 
   const heroCoverUrl = getMediaUrl(hero?.cover);
   const logoUrl = logo?.logo?.[0]?.url ?? null;
+  const fallbackHeroUrl =
+    heroCoverUrl && process.env.NEXT_PUBLIC_STRAPI_URL
+      ? `${process.env.NEXT_PUBLIC_STRAPI_URL}${heroCoverUrl}`
+      : null;
+  const footerLogoSrc = logoUrl ?? fallbackHeroUrl;
 
   return (
     <footer id="site-footer" className="w-full mt-auto">
@@ -55,10 +60,8 @@ const Footer = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <img
             src={
-              !logoLoadFailed &&
-              (heroCoverUrl || logoUrl) &&
-              process.env.NEXT_PUBLIC_STRAPI_URL
-                ? `${process.env.NEXT_PUBLIC_STRAPI_URL}${heroCoverUrl || logoUrl}`
+              !logoLoadFailed && footerLogoSrc
+                ? footerLogoSrc
                 : FALLBACK_LOGO
             }
             alt="Feedforward logo"

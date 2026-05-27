@@ -60,10 +60,8 @@ function LoginPageInner() {
           <div className="flex justify-center mb-6">
             <img
               src={
-                !logoLoadFailed &&
-                logo?.logo?.[0]?.url &&
-                process.env.NEXT_PUBLIC_STRAPI_URL
-                  ? `${process.env.NEXT_PUBLIC_STRAPI_URL}${logo.logo[0].url}`
+                !logoLoadFailed && logo?.logo?.[0]?.url
+                  ? logo.logo[0].url
                   : FALLBACK_LOGO
               }
               alt="FF Content Hub Logo"

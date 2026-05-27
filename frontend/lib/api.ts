@@ -134,6 +134,14 @@ export const getPodcastsPage = () =>
 export const getAdditionalContentPage = () =>
   getContentPage(["api/additional-content-page", "api/additional-content-pages"]);
 
+function toAbsoluteMediaUrl(rawUrl: string): string {
+  if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
+  const base = strapiUrl.trim().replace(/\/$/, "");
+  if (!base) return rawUrl;
+  const path = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
+  return `${base}${path}`;
+}
+
 // Normalize one logo media item (Strapi v4/v5 can return { url } or { data: { attributes: { url } } }).
 function normalizeLogoItem(media: unknown): { url: string; mime?: string; name?: string; alternativeText?: string } | null {
   if (!media || typeof media !== "object") return null;
@@ -147,7 +155,7 @@ function normalizeLogoItem(media: unknown): { url: string; mime?: string; name?:
   if (!urlStr) return null;
   const attrs = (m.attributes ?? (m.data as Record<string, unknown>)?.attributes) as Record<string, unknown> | undefined;
   return {
-    url: urlStr,
+    url: toAbsoluteMediaUrl(urlStr),
     mime: (m.mime ?? attrs?.mime ?? m.mimeType ?? attrs?.mimeType) as string | undefined,
     name: (m.name ?? attrs?.name) as string | undefined,
     alternativeText: (m.alternativeText ?? attrs?.alternativeText) as string | undefined,
