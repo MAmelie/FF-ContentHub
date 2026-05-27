@@ -20,9 +20,9 @@ const GROUP_LABELS: Record<TeamGroup, string> = {
 const TEAM_CARD_TOP_IMAGE =
   "w-full h-36 sm:h-40 md:h-44 object-cover rounded-lg shrink-0";
 
-/** Core team brochure row: landscape photo, tight column */
+/** Core team uses circular portraits like founding team. */
 const CORE_ROW_IMAGE =
-  "w-full aspect-[4/3] object-cover rounded-lg shrink-0";
+  "h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 shrink-0 rounded-full object-cover border border-card/60 shadow-sm";
 
 const FOUNDING_PHOTO =
   "h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 shrink-0 rounded-full object-cover border border-card/60 shadow-sm ring-2 ring-transparent ring-offset-2 ring-offset-gray-50 transition-[box-shadow] duration-200 ease-out group-hover:ring-[var(--brand-orange)]";
@@ -112,7 +112,7 @@ function CoreTeamRowCard({
         />
       ) : (
         <div
-          className="w-full aspect-[4/3] rounded-lg shrink-0 bg-secondary-blue/90 flex items-center justify-center"
+          className="h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 rounded-full shrink-0 bg-secondary-blue/90 flex items-center justify-center border border-card/60 shadow-sm"
           aria-hidden
         >
           <FaUser className="text-white/40 text-3xl sm:text-4xl" />
